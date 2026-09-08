@@ -4,7 +4,7 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } 
 
 // Tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBXyLGN_B98q4vywcgpBKUBsAALxxEIKIU",
+  apiKey: "AIzaSyBXLGN_B98q4vywcgpBKUBsAALxxEIKIU",
   authDomain: "juntaaguapotable-60fd0.firebaseapp.com",
   projectId: "juntaaguapotable-60fd0",
   storageBucket: "juntaaguapotable-60fd0.firebasestorage.app",
