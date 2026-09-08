@@ -1,37 +1,125 @@
+// Importar Firebase y Firestore desde el SDK modular de Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebaseapp.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebasefirestore.js";
+
+// Tu configuración de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBXyLGN_B98q4vywcgpBKUBsAALxxEIKIU",
+  authDomain: "juntaaguapotable-60fd0.firebaseapp.com",
+  projectId: "juntaaguapotable-60fd0",
+  storageBucket: "juntaaguapotable-60fd0.firebasestorage.app",
+  messagingSenderId: "501991940368",
+  appId: "1:501991940368:web:b748213ab32aafc6574595"
+};
+
+// Inicializar Firebase y Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // Parámetros Tarifarios
 const TARIFA_BASE = 2.50;
 const LIMITE_BASE = 20;
 const COSTO_EXCEDENTE = 0.25;
 
-// Credenciales administradoras almacenadas en LocalStorage (Por defecto: admin / 1234)
-let administradores = JSON.parse(localStorage.getItem('junta_admins')) || [
+// Variables en memoria sincronizadas con Firestore
+let administradores = [];
+let socios = [];
+let lecturas = [];
+let egresos = [];
+let capitalesMensuales = {};
+
+// Datos por defecto para inicializar si la base de datos está totalmente vacía
+const administradoresDefault = [
   { usuario: "admin", password: "1234" }
 ];
 
-let socios = JSON.parse(localStorage.getItem('junta_socios')) || [
+const sociosDefault = [
   { id: 1, nombre: "Ana Patricia Morales", medidor: "MED-004", cedula: "1755667788", telefono: "0991112233", email: "ana.morales@example.com", lecturaInicial: 0 },
   { id: 2, nombre: "Carlos Alberto Rodríguez", medidor: "MED-003", cedula: "1711223344", telefono: "0992223344", email: "carlos.rod@example.com", lecturaInicial: 0 },
   { id: 3, nombre: "Juan Carlos Pérez", medidor: "MED-001", cedula: "1712345678", telefono: "0993334455", email: "juan.perez@example.com", lecturaInicial: 100 },
   { id: 4, nombre: "María Luisa Gómez", medidor: "MED-002", cedula: "1787654321", telefono: "0994445566", email: "maria.gomez@example.com", lecturaInicial: 210 }
 ];
 
-let lecturas = JSON.parse(localStorage.getItem('junta_lecturas')) || [
+const lecturasDefault = [
   { id: 1, socioId: 3, fecha: "2026-09", anterior: 100, actual: 112, consumo: 12, total: 3.00, estado: "Pendiente", fechaPago: null },
   { id: 2, socioId: 4, fecha: "2026-09", anterior: 210, actual: 230, consumo: 20, total: 4.25, estado: "Pagado", fechaPago: "2026-09-03" }
 ];
 
-let egresos = JSON.parse(localStorage.getItem('junta_egresos')) || [
+const egresosDefault = [
   { id: 1, fecha: "2026-09-02", categoria: "Químicos / Tratamiento", descripcion: "Compra de cloro para tanque principal", monto: 25.00 }
 ];
 
-let capitalesMensuales = JSON.parse(localStorage.getItem('junta_capitales_mensuales')) || {};
+// Función general para cargar datos desde Firestore al iniciar
+async function cargarDatosDesdeFirebase() {
+  try {
+    // 1. Cargar Administradores
+    const snapAdmins = await getDocs(collection(db, "administradores"));
+    if (snapAdmins.empty) {
+      for (let admin of administradoresDefault) {
+        await addDoc(collection(db, "administradores"), admin);
+      }
+      administradores = [...administradoresDefault];
+    } else {
+      administradores = snapAdmins.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+
+    // 2. Cargar Socios
+    const snapSocios = await getDocs(collection(db, "socios"));
+    if (snapSocios.empty) {
+      for (let socio of sociosDefault) {
+        await addDoc(collection(db, "socios"), socio);
+      }
+      socios = [...sociosDefault];
+    } else {
+      socios = snapSocios.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+
+    // 3. Cargar Lecturas
+    const snapLecturas = await getDocs(collection(db, "lecturas"));
+    if (snapLecturas.empty) {
+      for (let lect of lecturasDefault) {
+        await addDoc(collection(db, "lecturas"), lect);
+      }
+      lecturas = [...lecturasDefault];
+    } else {
+      lecturas = snapLecturas.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+
+    // 4. Cargar Egresos
+    const snapEgresos = await getDocs(collection(db, "egresos"));
+    if (snapEgresos.empty) {
+      for (let eg of egresosDefault) {
+        await addDoc(collection(db, "egresos"), eg);
+      }
+      egresos = [...egresosDefault];
+    } else {
+      egresos = snapEgresos.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+
+    // 5. Cargar Capitales Mensuales
+    const snapCapitales = await getDocs(collection(db, "capitales"));
+    capitalesMensuales = {};
+    snapCapitales.forEach(d => {
+      const data = d.data();
+      capitalesMensuales[data.mes] = data.monto;
+    });
+
+  } catch (error) {
+    console.error("Error al conectar con Firestore, operando temporalmente con datos locales:", error);
+  }
+
+  // Inicializar interfaz una vez cargados los datos
+  inicializarInterfazSistema();
+}
 
 // Inicialización de Eventos y Login
 document.addEventListener("DOMContentLoaded", () => {
-  // Cargar preferencia de modo oscuro guardada
+  cargarDatosDesdeFirebase();
+});
+
+function inicializarInterfazSistema() {
   inicializarModoOscuro();
 
-  // Lógica de Autenticación / Login multicuenta
   const formLogin = document.getElementById('formLogin');
   if (formLogin) {
     formLogin.addEventListener('submit', (e) => {
@@ -96,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('inputBuscar').addEventListener('input', renderizarLecturas);
 
   document.getElementById('formEditar').onsubmit = guardarEdicion;
-});
+}
 
 // Funciones para el Modo Oscuro
 function inicializarModoOscuro() {
@@ -221,7 +309,7 @@ function cerrarModalCredenciales() {
   document.getElementById('formNuevoAdmin').reset();
 }
 
-function registrarNuevoAdmin(e) {
+async function registrarNuevoAdmin(e) {
   e.preventDefault();
   const usuario = document.getElementById('nuevoAdminUser').value.trim();
   const password = document.getElementById('nuevoAdminPass').value.trim();
@@ -231,8 +319,11 @@ function registrarNuevoAdmin(e) {
     return;
   }
 
-  administradores.push({ usuario, password });
-  localStorage.setItem('junta_admins', JSON.stringify(administradores));
+  const nuevoAdmin = { usuario, password };
+  const docRef = await addDoc(collection(db, "administradores"), nuevoAdmin);
+  nuevoAdmin.firestoreId = docRef.id;
+
+  administradores.push(nuevoAdmin);
   renderizarTablaAdmins();
   document.getElementById('formNuevoAdmin').reset();
   alert("✅ Cuenta de administrador creada con éxito.");
@@ -246,7 +337,7 @@ function renderizarTablaAdmins() {
   administradores.forEach((admin, index) => {
     let botonEliminar = '';
     if (administradores.length > 1) {
-      botonEliminar = `<button class="action-btn btn-delete" onclick="eliminarAdmin(${index})">🗑️ Eliminar</button>`;
+      botonEliminar = `<button class="action-btn btn-delete" onclick="eliminarAdmin('${admin.firestoreId}')">🗑️ Eliminar</button>`;
     } else {
       botonEliminar = `<small style="color: var(--text-light);">Principal</small>`;
     }
@@ -260,14 +351,15 @@ function renderizarTablaAdmins() {
   });
 }
 
-function eliminarAdmin(index) {
+async function eliminarAdmin(firestoreId) {
   if (administradores.length <= 1) {
     alert("⚠️ No puede eliminar el último administrador del sistema.");
     return;
   }
-  if (confirm(`¿Está seguro de eliminar la cuenta de administrador "${administradores[index].usuario}"?`)) {
-    administradores.splice(index, 1);
-    localStorage.setItem('junta_admins', JSON.stringify(administradores));
+  const adminAEliminar = administradores.find(a => a.firestoreId === firestoreId);
+  if (confirm(`¿Está seguro de eliminar la cuenta de administrador "${adminAEliminar ? adminAEliminar.usuario : ''}"?`)) {
+    await deleteDoc(doc(db, "administradores", firestoreId));
+    administradores = administradores.filter(a => a.firestoreId !== firestoreId);
     renderizarTablaAdmins();
   }
 }
@@ -313,7 +405,7 @@ function filtrarSelectSocios() {
   cargarSelectSocios(filtrados);
 }
 
-function guardarCapitalInicial() {
+async function guardarCapitalInicial() {
   const inputConfigMes = document.getElementById('inputConfigMes');
   const mes = inputConfigMes ? inputConfigMes.value : new Date().toISOString().slice(0, 7);
   const inputCapital = document.getElementById('inputCapitalInicial');
@@ -330,15 +422,28 @@ function guardarCapitalInicial() {
   }
 
   capitalesMensuales[mes] = monto;
-  localStorage.setItem('junta_capitales_mensuales', JSON.stringify(capitalesMensuales));
   
-  inputCapital.value = "";
+  // Guardar o actualizar en Firebase colección capitales
+  const snapCapitales = await getDocs(collection(db, "capitales"));
+  let encontradoDocId = null;
+  snapCapitales.forEach(d => {
+    if (d.data().mes === mes) {
+      encontradoDocId = d.id;
+    }
+  });
 
+  if (encontradoDocId) {
+    await updateDoc(doc(db, "capitales", encontradoDocId), { monto: monto });
+  } else {
+    await addDoc(collection(db, "capitales"), { mes: mes, monto: monto });
+  }
+
+  inputCapital.value = "";
   renderizarContabilidad();
   alert(`✅ Capital inicial para el período ${mes} guardado con éxito y campo limpiado.`);
 }
 
-function guardarNuevoSocio(e) {
+async function guardarNuevoSocio(e) {
   e.preventDefault();
 
   const nombre = document.getElementById('nuevoNombre').value.trim();
@@ -383,14 +488,16 @@ function guardarNuevoSocio(e) {
     lecturaInicial: parseFloat(document.getElementById('lecturaInicial').value) || 0
   };
 
+  const docRef = await addDoc(collection(db, "socios"), nuevoSocio);
+  nuevoSocio.firestoreId = docRef.id;
+
   socios.push(nuevoSocio);
-  guardarLocalStorage();
   cargarSelectSocios(socios);
   cerrarModalSocio();
   alert(`✅ Usuario registrado correctamente.`);
 }
 
-function guardarEdicionSocio(e) {
+async function guardarEdicionSocio(e) {
   e.preventDefault();
   const id = parseInt(document.getElementById('editSocioId').value);
   const nombre = document.getElementById('editSocioNombre').value.trim();
@@ -432,7 +539,17 @@ function guardarEdicionSocio(e) {
     socio.lecturaInicial = parseFloat(document.getElementById('editSocioLectura').value) || 0;
     socio.email = document.getElementById('editSocioCorreo').value.trim();
 
-    guardarLocalStorage();
+    if (socio.firestoreId) {
+      await updateDoc(doc(db, "socios", socio.firestoreId), {
+        nombre: socio.nombre,
+        cedula: socio.cedula,
+        medidor: socio.medidor,
+        telefono: socio.telefono,
+        lecturaInicial: socio.lecturaInicial,
+        email: socio.email
+      });
+    }
+
     cargarSelectSocios(socios);
     renderizarTablaUsuarios();
     renderizarLecturas();
@@ -461,10 +578,13 @@ function renderizarTablaUsuarios() {
   });
 }
 
-function eliminarSocio(id) {
+async function eliminarSocio(id) {
   if (confirm("¿Está seguro de eliminar este usuario?")) {
+    const socio = socios.find(s => s.id === id);
+    if (socio && socio.firestoreId) {
+      await deleteDoc(doc(db, "socios", socio.firestoreId));
+    }
     socios = socios.filter(s => s.id !== id);
-    guardarLocalStorage();
     cargarSelectSocios(socios);
     renderizarTablaUsuarios();
     renderizarLecturas();
@@ -506,7 +626,7 @@ function calcularTotal(consumo) {
   return TARIFA_BASE + ((consumo - LIMITE_BASE) * COSTO_EXCEDENTE);
 }
 
-function guardarLectura(e) {
+async function guardarLectura(e) {
   e.preventDefault();
   const periodoPago = document.getElementById('inputPeriodoPago').value;
   const socioId = parseInt(document.getElementById('selectSocio').value);
@@ -526,7 +646,7 @@ function guardarLectura(e) {
     return;
   }
 
-  lecturas.push({
+  const nuevaLectura = {
     id: Date.now(),
     socioId: socioId,
     fecha: periodoPago,
@@ -536,9 +656,12 @@ function guardarLectura(e) {
     total: calcularTotal(actual - anterior),
     estado: "Pendiente",
     fechaPago: null
-  });
+  };
 
-  guardarLocalStorage();
+  const docRef = await addDoc(collection(db, "lecturas"), nuevaLectura);
+  nuevaLectura.firestoreId = docRef.id;
+
+  lecturas.push(nuevaLectura);
   renderizarLecturas();
   limpiarFormularioLectura();
   alert("Lectura y período de pago registrados exitosamente.");
@@ -747,7 +870,7 @@ function exportarUsuariosXLS() {
   XLSX.writeFile(workbook, `Usuarios_Socios_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
-function eliminarLectura(id) {
+async function eliminarLectura(id) {
   const lectura = lecturas.find(l => l.id === id);
   if (!lectura) return;
 
@@ -756,14 +879,16 @@ function eliminarLectura(id) {
     : "¿Eliminar este registro?";
 
   if (confirm(mensaje)) {
+    if (lectura.firestoreId) {
+      await deleteDoc(doc(db, "lecturas", lectura.firestoreId));
+    }
     lecturas = lecturas.filter(l => l.id !== id);
-    guardarLocalStorage();
     renderizarLecturas();
     renderizarContabilidad();
   }
 }
 
-function marcarComoPagado(id) {
+async function marcarComoPagado(id) {
   const lectura = lecturas.find(l => l.id === id);
   if (!lectura) return;
 
@@ -778,7 +903,14 @@ function marcarComoPagado(id) {
 
   lectura.estado = "Pagado";
   lectura.fechaPago = new Date().toISOString().split('T')[0];
-  guardarLocalStorage();
+
+  if (lectura.firestoreId) {
+    await updateDoc(doc(db, "lecturas", lectura.firestoreId), {
+      estado: lectura.estado,
+      fechaPago: lectura.fechaPago
+    });
+  }
+
   renderizarLecturas();
   renderizarContabilidad();
   alert(`✅ ¡Pago registrado con éxito!`);
@@ -843,7 +975,7 @@ function abrirEdicion(id) {
   }
 }
 
-function guardarEdicion(e) {
+async function guardarEdicion(e) {
   e.preventDefault();
   const id = parseInt(document.getElementById('editId').value);
   const anterior = parseFloat(document.getElementById('editAnterior').value);
@@ -864,24 +996,36 @@ function guardarEdicion(e) {
     l.actual = actual;
     l.consumo = actual - anterior;
     l.total = calcularTotal(l.consumo);
-    guardarLocalStorage();
+
+    if (l.firestoreId) {
+      await updateDoc(doc(db, "lecturas", l.firestoreId), {
+        anterior: l.anterior,
+        actual: l.actual,
+        consumo: l.consumo,
+        total: l.total
+      });
+    }
+
     renderizarLecturas();
     renderizarContabilidad();
     cerrarModalEditar();
   }
 }
 
-function guardarGasto(e) {
+async function guardarGasto(e) {
   e.preventDefault();
-  egresos.push({
+  const nuevoEgreso = {
     id: Date.now(),
     fecha: document.getElementById('gastoFecha').value,
     categoria: document.getElementById('gastoCategoria').value,
     descripcion: document.getElementById('gastoDescripcion').value,
     monto: parseFloat(document.getElementById('gastoMonto').value)
-  });
+  };
 
-  guardarLocalStorage();
+  const docRef = await addDoc(collection(db, "egresos"), nuevoEgreso);
+  nuevoEgreso.firestoreId = docRef.id;
+
+  egresos.push(nuevoEgreso);
   renderizarContabilidad();
   this.reset();
   document.getElementById('gastoFecha').valueAsDate = new Date();
@@ -948,19 +1092,15 @@ function renderizarContabilidad() {
   document.getElementById('kpiBalance').innerText = `$${balanceTotal.toFixed(2)}`;
 }
 
-function eliminarGasto(id) {
+async function eliminarGasto(id) {
   if (confirm("¿Desea eliminar este egreso?")) {
+    const egreso = egresos.find(e => e.id === id);
+    if (egreso && egreso.firestoreId) {
+      await deleteDoc(doc(db, "egresos", egreso.firestoreId));
+    }
     egresos = egresos.filter(e => e.id !== id);
-    guardarLocalStorage();
     renderizarContabilidad();
   }
-}
-
-function guardarLocalStorage() {
-  localStorage.setItem('junta_socios', JSON.stringify(socios));
-  localStorage.setItem('junta_lecturas', JSON.stringify(lecturas));
-  localStorage.setItem('junta_egresos', JSON.stringify(egresos));
-  localStorage.setItem('junta_capitales_mensuales', JSON.stringify(capitalesMensuales));
 }
 
 function exportarPDFContabilidadMensual() {
