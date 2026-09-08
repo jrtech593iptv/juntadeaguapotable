@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,7 +12,29 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body>
+<body class="bloqueado">
+
+  <!-- MODAL DE INICIO DE SESIÓN -->
+  <div id="modalLogin" class="modal" style="display: flex;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h3 style="color: var(--primary); margin-bottom: 15px;">🔒 Acceso al Sistema</h3>
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px;">Junta de Agua Potable TOLONTAG</p>
+      
+      <form id="formLogin" class="modal-form">
+        <div class="form-group" style="text-align: left;">
+          <label for="usuarioLogin">Usuario:</label>
+          <input type="text" id="usuarioLogin" placeholder="Ingrese su usuario" required>
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="passwordLogin">Contraseña:</label>
+          <input type="password" id="passwordLogin" placeholder="Ingrese su contraseña" required>
+        </div>
+        <div class="form-actions" style="margin-top: 15px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Ingresar al Sistema</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <header class="navbar">
     <div class="container nav-container">
@@ -20,10 +43,15 @@
         <span class="subtitle">Sistema de Lecturas, Facturación y Contabilidad</span>
       </div>
       
-      <!-- Reloj y Fecha en tiempo real -->
-      <div class="reloj-container">
-        <div id="textoReloj">🕒 00:00:00</div>
-        <div id="textoFecha">📅 Cargando fecha...</div>
+      <!-- Reloj, Fecha, Modo Oscuro y Control de Sesión -->
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="reloj-container">
+          <div id="textoReloj">🕒 00:00:00</div>
+          <div id="textoFecha">📅 Cargando fecha...</div>
+        </div>
+        <button class="btn btn-secondary" onclick="toggleModoOscuro()" id="btnModoOscuro" style="font-size: 0.85rem; padding: 8px 12px;" title="Cambiar modo oscuro / claro">🌙 Modo Oscuro</button>
+        <button class="btn btn-warning" onclick="abrirModalCredenciales()" style="font-size: 0.85rem; padding: 8px 12px;" title="Administrar cuentas de acceso">🔑 Cuentas Admin</button>
+        <button class="btn btn-danger" onclick="cerrarSesion()" style="font-size: 0.85rem; padding: 8px 12px;" title="Cerrar sesión actual">🚪 Cerrar Sesión</button>
       </div>
 
       <nav class="nav-tabs">
@@ -73,7 +101,7 @@
 
           <div class="form-group">
             <label for="inputAnterior">Lectura Anterior (m³):</label>
-            <input type="number" id="inputAnterior" readonly placeholder="Auto-completado" style="background-color: #e2e8f0; cursor: not-allowed;">
+            <input type="number" id="inputAnterior" readonly placeholder="Auto-completado" style="cursor: not-allowed;">
           </div>
 
           <div class="form-group">
@@ -83,12 +111,12 @@
 
           <div class="form-group">
             <label for="inputConsumoCalculado">Consumo Calculado (m³):</label>
-            <input type="text" id="inputConsumoCalculado" readonly placeholder="0 m³" style="background-color: #f1f5f9; font-weight: bold; color: #0284c7;">
+            <input type="text" id="inputConsumoCalculado" readonly placeholder="0 m³" style="font-weight: bold; color: var(--primary);">
           </div>
 
           <div class="form-group">
             <label for="inputValorCalculado">Total Estimado ($):</label>
-            <input type="text" id="inputValorCalculado" readonly placeholder="$0.00" style="background-color: #f1f5f9; font-weight: bold; color: #16a34a;">
+            <input type="text" id="inputValorCalculado" readonly placeholder="$0.00" style="font-weight: bold; color: var(--success);">
           </div>
 
           <div class="form-group full-width form-actions-compact">
@@ -108,7 +136,7 @@
             </div>
             <!-- Selector de Opciones de Exportación -->
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <select id="selectFormatoExportar" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px;">
+              <select id="selectFormatoExportar" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
                 <option value="">-- Seleccionar Formato --</option>
                 <option value="pdf">📄 Exportar a PDF</option>
                 <option value="xls">📊 Exportar a XLS (Excel)</option>
@@ -169,12 +197,12 @@
       </section>
 
       <!-- Configuración de Capital Inicial Mensual -->
-      <section class="card" style="background-color: #f8fafc; border: 1px dashed var(--primary);">
+      <section class="card" style="border: 1px dashed var(--primary);">
         <h2>⚙️ Configurar Capital Inicial de Caja (Mensual)</h2>
         <div class="grid-form" style="margin-top: 15px; align-items: flex-end;">
           <div class="form-group">
             <label for="inputConfigMes">Seleccionar Mes a Iniciar:</label>
-            <input type="month" id="inputConfigMes" class="form-control" style="padding: 10px; font-size: 0.95rem; border: 1px solid var(--border); border-radius: 6px;">
+            <input type="month" id="inputConfigMes" class="form-control" style="padding: 10px; font-size: 0.95rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
           </div>
           <div class="form-group">
             <label for="inputCapitalInicial">Monto Capital Inicial para el Mes Seleccionado ($):</label>
@@ -227,7 +255,7 @@
           <div class="action-buttons" style="align-items: center; gap: 10px;">
             <div style="display: flex; gap: 5px; align-items: center;">
               <label for="filtroMesContabilidad" style="font-size: 0.85rem;">Mes Visualizado:</label>
-              <input type="month" id="filtroMesContabilidad" class="form-control" style="padding: 6px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 6px;">
+              <input type="month" id="filtroMesContabilidad" class="form-control" style="padding: 6px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
             </div>
             <button class="btn btn-success" onclick="exportarPDFContabilidadMensual()" style="padding: 6px 12px; font-size: 0.85rem;">📄 Exportar Mensual PDF</button>
           </div>
@@ -277,7 +305,7 @@
         </div>
         <div class="form-group">
           <label for="nuevaCedula">Cédula / RUC (10 o 13 dígitos):</label>
-          <input type="text" id="nuevaCedula" placeholder="1700000000 o 1700000000001" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" title="Debe ser de 10 dígitos (Cédula) o 13 dígitos (RUC)" required>
+          <input type="text" id="nuevaCedula" placeholder="1700000000 or 1700000000001" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" title="Debe ser de 10 dígitos (Cédula) o 13 dígitos (RUC)" required>
         </div>
         <div class="form-group">
           <label for="nuevoMedidor">N° Medidor:</label>
@@ -309,7 +337,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
         <h3>👥 Gestión y Modificación de Usuarios</h3>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-          <select id="selectFormatoExportarUsuarios" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px;">
+          <select id="selectFormatoExportarUsuarios" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
             <option value="">-- Seleccionar Formato --</option>
             <option value="pdf">📄 Exportar a PDF</option>
             <option value="xls">📊 Exportar a XLS (Excel)</option>
@@ -331,6 +359,40 @@
             </tr>
           </thead>
           <tbody id="tablaUsuariosBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE GESTIÓN DE CREDENCIALES / ADMINISTRADORES -->
+  <div id="modalCredenciales" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalCredenciales()">&times;</span>
+      <h3>🔑 Gestión de Cuentas de Acceso (Admin)</h3>
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">Cree nuevos usuarios autorizados para ingresar al sistema.</p>
+      
+      <form id="formNuevoAdmin" class="modal-form" style="margin-bottom: 20px;">
+        <div class="form-group">
+          <label for="nuevoAdminUser">Nombre de Usuario:</label>
+          <input type="text" id="nuevoAdminUser" placeholder="Ej: operador2" required>
+        </div>
+        <div class="form-group">
+          <label for="nuevoAdminPass">Contraseña:</label>
+          <input type="password" id="nuevoAdminPass" placeholder="Contraseña segura" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">➕ Registrar Nuevo Administrador</button>
+      </form>
+
+      <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--primary);">Usuarios Administradores Actuales:</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaAdminsBody"></tbody>
         </table>
       </div>
     </div>
@@ -381,7 +443,7 @@
         <input type="hidden" id="editId">
         <div class="form-group">
           <label for="editAnterior">Lectura Anterior (m³):</label>
-          <input type="number" id="editAnterior" readonly style="background-color: #e2e8f0; cursor: not-allowed;">
+          <input type="number" id="editAnterior" readonly style="cursor: not-allowed;">
         </div>
         <div class="form-group">
           <label for="editActual">Lectura Actual (m³):</label>
