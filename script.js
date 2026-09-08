@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Tu configuración de Firebase
+// Tu configuración de Firebase (Reemplaza con tus credenciales reales si es necesario)
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "juntaaguapotable-56728.firebaseapp.com",
@@ -334,7 +334,7 @@ function renderizarTablaAdmins() {
   if (!tbody) return;
   tbody.innerHTML = "";
 
-  administradores.forEach((admin, index) => {
+  administradores.forEach((admin) => {
     let botonEliminar = '';
     if (administradores.length > 1) {
       botonEliminar = `<button class="action-btn btn-delete" onclick="eliminarAdmin('${admin.firestoreId}')">🗑️ Eliminar</button>`;
@@ -423,7 +423,6 @@ async function guardarCapitalInicial() {
 
   capitalesMensuales[mes] = monto;
   
-  // Guardar o actualizar en Firebase colección capitales
   const snapCapitales = await getDocs(collection(db, "capitales"));
   let encontradoDocId = null;
   snapCapitales.forEach(d => {
@@ -440,7 +439,7 @@ async function guardarCapitalInicial() {
 
   inputCapital.value = "";
   renderizarContabilidad();
-  alert(`✅ Capital inicial para el período ${mes} guardado con éxito y campo limpiado.`);
+  alert(`✅ Capital inicial para el período ${mes} guardado con éxito.`);
 }
 
 async function guardarNuevoSocio(e) {
@@ -1187,6 +1186,7 @@ function generarPDFPlanilla(id) {
 
   doc.save(`Planilla_${socio?.nombre || 'Socio'}_${lectura.fecha}.pdf`);
 }
+
 // Exponer funciones al objeto global window para su uso en eventos onclick del HTML
 window.cambiarPestana = cambiarPestana;
 window.abrirModalSocio = abrirModalSocio;
