@@ -1,6 +1,8 @@
+// Importar Firebase y Firestore desde el SDK modular de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// Tu configuración de Firebase
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "juntaaguapotable-56728.firebaseapp.com",
@@ -10,13 +12,16 @@ const firebaseConfig = {
   appId: "TU_APP_ID"
 };
 
+// Inicializar Firebase y Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Parámetros Tarifarios
 const TARIFA_BASE = 2.50;
 const LIMITE_BASE = 20;
 const COSTO_EXCEDENTE = 0.25;
 
+// Variables en memoria sincronizadas con Firestore
 let administradores = [];
 let socios = [];
 let lecturas = [];
@@ -318,6 +323,7 @@ async function registrarNuevoAdmin(e) {
   alert("✅ Cuenta de administrador creada con éxito.");
 }
 
+// Funciones para Editar Administrador (Usuario y Contraseña)
 function abrirModalEditarAdmin(firestoreId) {
   const admin = administradores.find(a => a.firestoreId === firestoreId);
   if (admin) {
@@ -336,23 +342,36 @@ function cerrarModalEditarAdmin() {
 async function guardarEdicionAdmin(e) {
   e.preventDefault();
   const firestoreId = document.getElementById('editAdminFirestoreId').value;
+  const nuevoUsuario = document.getElementById('editAdminUser').value.trim();
   const nuevaPassword = document.getElementById('editAdminNewPass').value.trim();
 
-  if (!nuevaPassword) {
-    alert("⚠️ Ingrese una contraseña válida.");
+  if (!nuevoUsuario) {
+    alert("⚠️ El nombre de usuario no puede estar vacío.");
+    return;
+  }
+
+  // Verificar si el nombre de usuario ya está en uso por otro admin
+  const usuarioExistente = administradores.find(a => a.usuario.toLowerCase() === nuevoUsuario.toLowerCase() && a.firestoreId !== firestoreId);
+  if (usuarioExistente) {
+    alert("⚠️ Este nombre de usuario ya está en uso por otra cuenta.");
     return;
   }
 
   const admin = administradores.find(a => a.firestoreId === firestoreId);
   if (admin) {
-    admin.password = nuevaPassword;
-    await updateDoc(doc(db, "administradores", firestoreId), {
-      password: nuevaPassword
-    });
+    admin.usuario = nuevoUsuario;
+    const datosActualizacion = { usuario: nuevoUsuario };
+
+    if (nuevaPassword) {
+      admin.password = nuevaPassword;
+      datosActualizacion.password = nuevaPassword;
+    }
+
+    await updateDoc(doc(db, "administradores", firestoreId), datosActualizacion);
 
     cerrarModalEditarAdmin();
     renderizarTablaAdmins();
-    alert(`✅ Contraseña del administrador "${admin.usuario}" actualizada con éxito.`);
+    alert(`✅ Información del administrador actualizada con éxito.`);
   }
 }
 
@@ -369,7 +388,7 @@ function renderizarTablaAdmins() {
       botonEliminar = `<small style="color: var(--text-light);">Principal</small>`;
     }
 
-    const botonEditar = `<button class="action-btn btn-edit" onclick="abrirModalEditarAdmin('${admin.firestoreId}')">🔑 Cambiar Clave</button>`;
+    const botonEditar = `<button class="action-btn btn-edit" onclick="abrirModalEditarAdmin('${admin.firestoreId}')">✏️ Editar Info</button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -487,24 +506,27 @@ async function guardarNuevoSocio(e) {
   const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
   if (!regexNombre.test(nombre)) {
     alert("⚠️ Error en el Nombre Completo: Solo se permite texto (letras y espacios).");
+    document.getElementById('nuevoNombre').focus();
     return;
   }
 
   const regexCedulaRuc = /^\d{10}$|^\d{13}$/;
   if (!regexCedulaRuc.test(cedula)) {
-    alert("⚠️ Error en Cédula / RUC: Debe tener 10 o 13 dígitos numéricos.");
+    alert("⚠️ Error en Cédula / RUC: Debe contener únicamente números y tener exactamente 10 dígitos (Cédula) o 13 dígitos (RUC).");
+    document.getElementById('nuevaCedula').focus();
     return;
   }
 
   const regexTelefono = /^0\d{9}$/;
   if (!regexTelefono.test(telefono)) {
-    alert("⚠️ Error en Teléfono: Debe tener 10 dígitos y empezar por '0'.");
+    alert("⚠️ Error en Teléfono / WhatsApp: Debe tener exactamente 10 dígitos y empezar obligatoriamente con el número '0'.");
+    document.getElementById('nuevoTelefono').focus();
     return;
   }
 
   const medidorExiste = socios.some(s => s.medidor.toLowerCase() === medidorIngresado.toLowerCase());
   if (medidorExiste) {
-    alert(`⚠️ ATENCIÓN: El número de medidor "${medidorIngresado}" ya está registrado.`);
+    alert(`⚠️ ATENCIÓN: El número de medidor "${medidorIngresado}" ya se encuentra registrado en el sistema con otro usuario.`);
     return;
   }
 
@@ -535,7 +557,32 @@ async function guardarEdicionSocio(e) {
   const telefono = document.getElementById('editSocioTelefono').value.trim();
   const medidorIngresado = document.getElementById('editSocioMedidor').value.trim();
 
+  const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  if (!regexNombre.test(nombre)) {
+    alert("⚠️ Error en el Nombre Completo: Solo se permite texto.");
+    return;
+  }
+
+  const regexCedulaRuc = /^\d{10}$|^\d{13}$/;
+  if (!regexCedulaRuc.test(cedula)) {
+    alert("⚠️ Error en Cédula / RUC: Debe ser de 10 o 13 dígitos numéricos.");
+    return;
+  }
+
+  const regexTelefono = /^0\d{9}$/;
+  if (!regexTelefono.test(telefono)) {
+    alert("⚠️ Error en Teléfono: Debe tener 10 dígitos y empezar por '0'.");
+    return;
+  }
+
+  const medidorExiste = socios.some(s => s.medidor.toLowerCase() === medidorIngresado.toLowerCase() && s.id !== id);
+  if (medidorExiste) {
+    alert(`⚠️ ATENCIÓN: El número de medidor "${medidorIngresado}" ya está asignado a otro usuario.`);
+    return;
+  }
+
   const socio = socios.find(s => s.id === id);
+
   if (socio) {
     socio.nombre = nombre;
     socio.cedula = cedula;
@@ -741,8 +788,12 @@ function ejecutarExportacionLecturas() {
     alert("⚠️ Por favor seleccione un formato de exportación (PDF o XLS).");
     return;
   }
-  if (formato === 'pdf') exportarLecturasPDF();
-  else if (formato === 'xls') exportarLecturasXLS();
+
+  if (formato === 'pdf') {
+    exportarLecturasPDF();
+  } else if (formato === 'xls') {
+    exportarLecturasXLS();
+  }
 }
 
 function exportarLecturasPDF() {
@@ -759,8 +810,15 @@ function exportarLecturasPDF() {
     const socio = socios.find(s => s.id === l.socioId);
     const estadoConFecha = l.estado === 'Pagado' ? `Pagado (F. Pago: ${l.fechaPago || 'N/A'})` : 'Pendiente';
     return [
-      l.fecha, socio ? socio.nombre : 'N/A', socio ? socio.cedula : 'N/A', socio ? socio.medidor : 'N/A',
-      `${l.anterior} m³`, `${l.actual} m³`, `${l.consumo} m³`, `$${l.total.toFixed(2)}`, estadoConFecha
+      l.fecha,
+      socio ? socio.nombre : 'N/A',
+      socio ? socio.cedula : 'N/A',
+      socio ? socio.medidor : 'N/A',
+      `${l.anterior} m³`,
+      `${l.actual} m³`,
+      `${l.consumo} m³`,
+      `$${l.total.toFixed(2)}`,
+      estadoConFecha
     ];
   });
 
@@ -777,29 +835,42 @@ function exportarLecturasPDF() {
 
 function exportarLecturasXLS() {
   const filtradas = obtenerLecturasFiltradas();
+  
   const datosExcel = filtradas.map(l => {
     const socio = socios.find(s => s.id === l.socioId);
     return {
-      "Período": l.fecha, "Socio": socio ? socio.nombre : 'N/A', "Cédula": socio ? socio.cedula : 'N/A',
-      "Medidor": socio ? socio.medidor : 'N/A', "Lectura Anterior (m3)": l.anterior, "Lectura Actual (m3)": l.actual,
-      "Consumo (m3)": l.consumo, "Total ($)": l.total, "Estado": l.estado, "Fecha de Pago": l.fechaPago || 'No pagado'
+      "Período": l.fecha,
+      "Socio": socio ? socio.nombre : 'N/A',
+      "Cédula": socio ? socio.cedula : 'N/A',
+      "Medidor": socio ? socio.medidor : 'N/A',
+      "Lectura Anterior (m3)": l.anterior,
+      "Lectura Actual (m3)": l.actual,
+      "Consumo (m3)": l.consumo,
+      "Total ($)": l.total,
+      "Estado": l.estado,
+      "Fecha de Pago": l.fechaPago || 'No pagado'
     };
   });
 
   const worksheet = XLSX.utils.json_to_sheet(datosExcel);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Registros y Facturas");
+
   XLSX.writeFile(workbook, `Registros_Facturas_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
 function ejecutarExportacionUsuarios() {
   const formato = document.getElementById('selectFormatoExportarUsuarios').value;
   if (!formato) {
-    alert("⚠️ Por favor seleccione un formato de exportación.");
+    alert("⚠️ Por favor seleccione un formato de exportación (PDF o XLS) para los usuarios.");
     return;
   }
-  if (formato === 'pdf') exportarUsuariosPDF();
-  else if (formato === 'xls') exportarUsuariosXLS();
+
+  if (formato === 'pdf') {
+    exportarUsuariosPDF();
+  } else if (formato === 'xls') {
+    exportarUsuariosXLS();
+  }
 }
 
 function exportarUsuariosPDF() {
@@ -812,7 +883,14 @@ function exportarUsuariosPDF() {
   doc.setFontSize(12);
   doc.text("Reporte General de Usuarios / Socios", 105, 22, { align: "center" });
 
-  const filas = listaSocios.map(s => [s.nombre, s.cedula, s.medidor, s.telefono || 'Sin teléfono', s.email || 'Sin correo', `${s.lecturaInicial} m³`]);
+  const filas = listaSocios.map(s => [
+    s.nombre,
+    s.cedula,
+    s.medidor,
+    s.telefono || 'Sin teléfono',
+    s.email || 'Sin correo',
+    `${s.lecturaInicial} m³`
+  ]);
 
   doc.autoTable({
     startY: 30,
@@ -827,14 +905,20 @@ function exportarUsuariosPDF() {
 
 function exportarUsuariosXLS() {
   const listaSocios = obtenerSociosOrdenados();
+  
   const datosExcel = listaSocios.map(s => ({
-    "Nombre Completo": s.nombre, "Cédula / RUC": s.cedula, "N° Medidor": s.medidor,
-    "Teléfono": s.telefono || 'Sin teléfono', "Correo Electrónico": s.email || 'Sin correo', "Lectura Inicial (m3)": s.lecturaInicial
+    "Nombre Completo": s.nombre,
+    "Cédula / RUC": s.cedula,
+    "N° Medidor": s.medidor,
+    "Teléfono": s.telefono || 'Sin teléfono',
+    "Correo Electrónico": s.email || 'Sin correo',
+    "Lectura Inicial (m3)": s.lecturaInicial
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(datosExcel);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Usuarios y Socios");
+
   XLSX.writeFile(workbook, `Usuarios_Socios_${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
@@ -842,7 +926,11 @@ async function eliminarLectura(id) {
   const lectura = lecturas.find(l => l.id === id);
   if (!lectura) return;
 
-  if (confirm("¿Está seguro de eliminar este registro?")) {
+  let mensaje = lectura.estado === 'Pagado' 
+    ? "¿Está seguro de eliminar este registro que ya se encuentra pagado? Se restará de los ingresos de caja." 
+    : "¿Eliminar este registro?";
+
+  if (confirm(mensaje)) {
     if (lectura.firestoreId) {
       await deleteDoc(doc(db, "lecturas", lectura.firestoreId));
     }
@@ -857,7 +945,13 @@ async function marcarComoPagado(id) {
   if (!lectura) return;
 
   const socio = socios.find(s => s.id === lectura.socioId);
-  if (!confirm(`¿Desea registrar el pago de la planilla de ${socio ? socio.nombre : 'Socio'} por $${lectura.total.toFixed(2)}?`)) return;
+  const nombreSocio = socio ? socio.nombre : 'Socio';
+
+  const confirmarCobro = confirm(`¿Desea registrar el pago de la planilla del socio/a ${nombreSocio} por un valor de $${lectura.total.toFixed(2)}?`);
+  
+  if (!confirmarCobro) {
+    return; 
+  }
 
   lectura.estado = "Pagado";
   lectura.fechaPago = new Date().toISOString().split('T')[0];
@@ -871,37 +965,61 @@ async function marcarComoPagado(id) {
 
   renderizarLecturas();
   renderizarContabilidad();
-  alert("✅ ¡Pago registrado con éxito!");
+  alert(`✅ ¡Pago registrado con éxito!`);
+
+  if (socio && socio.telefono) {
+    const enviarWhats = confirm(`💬 ¿Desea enviar la factura del consumo por WhatsApp a ${socio.nombre} (${socio.telefono})?`);
+    if (enviarWhats) {
+      enviarPorWhatsApp(id);
+    }
+  } else {
+    alert("ℹ️ El socio no tiene un número de teléfono configurado para el envío por WhatsApp.");
+  }
 }
 
 function enviarPorWhatsApp(id) {
   const lectura = lecturas.find(l => l.id === id);
   const socio = socios.find(s => s.id === lectura.socioId);
-  if (!socio || !socio.telefono) return alert("⚠️ Sin teléfono registrado.");
+
+  if (!socio || !socio.telefono) {
+    alert("⚠️ El socio no tiene un número de teléfono registrado.");
+    return;
+  }
 
   let telefonoLimpio = socio.telefono.replace(/\D/g, '');
   if (telefonoLimpio.length === 10 && telefonoLimpio.startsWith('0')) {
     telefonoLimpio = '593' + telefonoLimpio.substring(1);
   }
 
-  const textoMensaje = `Estimado/a *${socio.nombre}*, su planilla de *${lectura.fecha}* ha sido pagada. Total: *$${lectura.total.toFixed(2)}*.`;
-  window.open(`https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${encodeURIComponent(textoMensaje)}`, '_blank');
+  const textoMensaje = `Estimado/a *${socio.nombre}*, le saludamos de la Junta de Agua Potable. Su planilla correspondiente al período *${lectura.fecha}* ha sido procesada y pagada con éxito (Fecha de pago: ${lectura.fechaPago || 'N/A'}).\n\n📊 *Detalle de Consumo:*\n- Medidor: ${socio.medidor}\n- Consumo: ${lectura.consumo} m³\n- Total Pagado: *$${lectura.total.toFixed(2)}*\n\nGracias por su puntualidad.`;
+
+  const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${encodeURIComponent(textoMensaje)}`;
+  window.open(urlWhatsApp, '_blank');
 }
 
 function enviarPorCorreo(id) {
   const lectura = lecturas.find(l => l.id === id);
   const socio = socios.find(s => s.id === lectura.socioId);
-  if (!socio || !socio.email) return alert("⚠️ Sin correo registrado.");
 
-  const asunto = encodeURIComponent(`Comprobante de Pago - Período ${lectura.fecha}`);
-  const cuerpo = encodeURIComponent(`Estimado/a ${socio.nombre},\n\nDetalle de consumo: ${lectura.consumo} m³, Total: $${lectura.total.toFixed(2)}.`);
-  window.location.href = `mailto:${socio.email}?subject=${asunto}&body=${cuerpo}`;
+  if (!socio || !socio.email) {
+    alert("⚠️ El socio no tiene un correo electrónico registrado.");
+    return;
+  }
+
+  const asunto = encodeURIComponent(`Comprobante de Pago / Planilla de Agua - Período ${lectura.fecha}`);
+  const cuerpo = encodeURIComponent(`Estimado/a ${socio.nombre},\n\nLe enviamos el detalle de su consumo de agua potable para el período ${lectura.fecha}:\n\n- N° Medidor: ${socio.medidor}\n- Lectura Anterior: ${lectura.anterior} m³\n- Lectura Actual: ${lectura.actual} m³\n- Consumo Total: ${lectura.consumo} m³\n- Valor Pagado: $${lectura.total.toFixed(2)}\n- Estado: ${lectura.estado}\n- Fecha de Pago: ${lectura.fechaPago || 'N/A'}\n\nAtentamente,\nJunta Administradora de Agua Potable`);
+
+  const urlMailto = `mailto:${socio.email}?subject=${asunto}&body=${cuerpo}`;
+  window.location.href = urlMailto;
 }
 
 function abrirEdicion(id) {
   const l = lecturas.find(item => item.id === id);
   if (l) {
-    if (l.estado === 'Pagado') return alert("⚠️ No se puede editar un registro pagado.");
+    if (l.estado === 'Pagado') {
+      alert("⚠️ Esta lectura ya se encuentra pagada. No se permite su edición.");
+      return;
+    }
     document.getElementById('editId').value = l.id;
     document.getElementById('editAnterior').value = l.anterior;
     document.getElementById('editActual').value = l.actual;
@@ -915,10 +1033,17 @@ async function guardarEdicion(e) {
   const anterior = parseFloat(document.getElementById('editAnterior').value);
   const actual = parseFloat(document.getElementById('editActual').value);
 
-  if (actual < anterior) return alert("La lectura actual debe ser mayor o igual a la anterior.");
+  if (actual < anterior) {
+    alert("La lectura actual debe ser mayor o igual a la anterior.");
+    return;
+  }
 
   const l = lecturas.find(item => item.id === id);
   if (l) {
+    if (l.estado === 'Pagado') {
+      alert("⚠️ No se puede editar un registro pagado.");
+      return;
+    }
     l.anterior = anterior;
     l.actual = actual;
     l.consumo = actual - anterior;
@@ -926,7 +1051,10 @@ async function guardarEdicion(e) {
 
     if (l.firestoreId) {
       await updateDoc(doc(db, "lecturas", l.firestoreId), {
-        anterior: l.anterior, actual: l.actual, consumo: l.consumo, total: l.total
+        anterior: l.anterior,
+        actual: l.actual,
+        consumo: l.consumo,
+        total: l.total
       });
     }
 
@@ -979,15 +1107,16 @@ function renderizarContabilidad() {
   lecturas.filter(l => l.estado === 'Pagado' && l.fecha === mesSeleccionado).forEach(c => {
     totalIngresos += c.total;
     const socio = socios.find(s => s.id === c.socioId);
+    
     tbody.innerHTML += `
       <tr>
         <td>${c.fechaPago || c.fecha}</td>
         <td><span class="badge-paid">Ingreso</span></td>
         <td>Cobro de Agua</td>
-        <td>Planilla ${socio ? socio.nombre : 'Usuario'}</td>
+        <td>Planilla ${socio ? socio.nombre : 'Usuario'} (${c.consumo} m³)</td>
         <td>$${c.total.toFixed(2)}</td>
         <td>-</td>
-        <td><button class="action-btn btn-delete" onclick="eliminarLectura(${c.id})">🗑️</button></td>
+        <td><button class="action-btn btn-delete" onclick="eliminarLectura(${c.id})" title="Eliminar ingreso de caja">🗑️</button></td>
       </tr>
     `;
   });
@@ -1030,11 +1159,16 @@ function exportarPDFContabilidadMensual() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const mesSeleccionado = obtenerMesVisualizado();
+  const [anio, mes] = mesSeleccionado.split('-');
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const tituloPeriodo = `Período Mensual: ${meses[parseInt(mes) - 1]} de ${anio}`;
 
   doc.setFontSize(16);
   doc.text("JUNTA ADMINISTRADORA DE AGUA POTABLE", 105, 15, { align: "center" });
   doc.setFontSize(12);
-  doc.text(`Libro Diario de Caja - Período: ${mesSeleccionado}`, 105, 22, { align: "center" });
+  doc.text("Libro Diario de Caja - Contabilidad Mensualizada", 105, 22, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(tituloPeriodo, 105, 28, { align: "center" });
 
   const filas = [];
   let totalIngresos = 0, totalEgresos = 0;
@@ -1054,12 +1188,20 @@ function exportarPDFContabilidadMensual() {
   });
 
   doc.autoTable({
-    startY: 30,
+    startY: 35,
     head: [["Fecha", "Tipo", "Categoría", "Detalle", "Ingreso", "Egreso"]],
     body: filas,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [2, 132, 199] }
   });
+
+  const finalY = doc.lastAutoTable.finalY + 10;
+  const balanceFinal = (capitalMes + totalIngresos) - totalEgresos;
+  doc.setFontSize(10);
+  doc.text(`Capital Inicial:  $${capitalMes.toFixed(2)}`, 14, finalY);
+  doc.text(`Total Ingresos:   $${totalIngresos.toFixed(2)}`, 14, finalY + 6);
+  doc.text(`Total Egresos:    $${totalEgresos.toFixed(2)}`, 14, finalY + 12);
+  doc.text(`Balance en Caja:  $${balanceFinal.toFixed(2)}`, 14, finalY + 18);
 
   doc.save(`Contabilidad_${mesSeleccionado}.pdf`);
 }
@@ -1079,14 +1221,26 @@ function generarPDFPlanilla(id) {
     startY: 30,
     head: [["Campo", "Detalle"]],
     body: [
-      ["Socio", socio ? socio.nombre : 'N/A'], ["Cédula", socio ? socio.cedula : 'N/A'],
-      ["Medidor", socio ? socio.medidor : 'N/A'], ["Período", lectura.fecha], ["Total", `$${lectura.total.toFixed(2)}`]
+      ["Socio", socio ? socio.nombre : 'N/A'],
+      ["Cédula", socio ? socio.cedula : 'N/A'],
+      ["Medidor", socio ? socio.medidor : 'N/A'],
+      ["Teléfono", socio ? socio.telefono : 'N/A'],
+      ["Período de Pago", lectura.fecha],
+      ["Estado", lectura.estado],
+      ["Fecha de Pago", lectura.fechaPago || 'Pendiente']
     ]
+  });
+
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 10,
+    head: [["Anterior", "Actual", "Consumo", "Tarifa Base", "Total"]],
+    body: [[`${lectura.anterior} m³`, `${lectura.actual} m³`, `${lectura.consumo} m³`, `$${TARIFA_BASE.toFixed(2)}`, `$${lectura.total.toFixed(2)}`]]
   });
 
   doc.save(`Planilla_${socio?.nombre || 'Socio'}_${lectura.fecha}.pdf`);
 }
 
+// Exponer funciones globales
 window.cambiarPestana = cambiarPestana;
 window.abrirModalSocio = abrirModalSocio;
 window.cerrarModalSocio = cerrarModalSocio;
