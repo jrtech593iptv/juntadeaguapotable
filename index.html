@@ -133,7 +133,6 @@
             <div class="search-box">
               <input type="text" id="inputBuscar" placeholder="🔍 Buscar por nombre, cédula o medidor...">
             </div>
-            <!-- Selector de Opciones de Exportación -->
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
               <select id="selectFormatoExportar" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
                 <option value="">-- Seleccionar Formato --</option>
@@ -160,9 +159,7 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody id="tablaBody">
-              <!-- Carga dinámica -->
-            </tbody>
+            <tbody id="tablaBody"></tbody>
           </table>
         </div>
         <div class="card-footer">
@@ -175,7 +172,6 @@
     <!-- SECCIÓN 2: CONTABILIDAD Y CAJA -->
     <div id="sec-contabilidad" class="tab-content">
       
-      <!-- Indicadores KPIs Contables -->
       <section class="kpi-grid">
         <div class="kpi-card kpi-capital">
           <h3>Capital Inicial del Mes</h3>
@@ -195,7 +191,6 @@
         </div>
       </section>
 
-      <!-- Configuración de Capital Inicial Mensual -->
       <section class="card" style="border: 1px dashed var(--primary);">
         <h2>⚙️ Configurar Capital Inicial de Caja (Mensual)</h2>
         <div class="grid-form" style="margin-top: 15px; align-items: flex-end;">
@@ -213,7 +208,6 @@
         </div>
       </section>
 
-      <!-- Formulario Registrar Egreso -->
       <section class="card">
         <h2>💸 Registrar Egreso / Gasto Operativo</h2>
         <form id="formGasto" class="grid-form">
@@ -247,7 +241,6 @@
         </form>
       </section>
 
-      <!-- Libro Diario de Caja -->
       <section class="card">
         <div class="card-header">
           <h2>📖 Libro Diario de Caja (Ingresos y Egresos)</h2>
@@ -273,9 +266,7 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody id="tablaMovimientosBody">
-              <!-- Carga dinámica -->
-            </tbody>
+            <tbody id="tablaMovimientosBody"></tbody>
           </table>
         </div>
       </section>
@@ -284,7 +275,6 @@
 
   </main>
 
-  <!-- Pie de página institucional y de autoría -->
   <footer class="site-footer">
     <div class="container">
       <p>Sistema desarrollado por <strong>César Oña - JR TECH</strong></p>
@@ -292,7 +282,7 @@
     </div>
   </footer>
 
-  <!-- Modales -->
+  <!-- MODAL NUEVO SOCIO -->
   <div id="modalSocio" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalSocio()">&times;</span>
@@ -304,7 +294,7 @@
         </div>
         <div class="form-group">
           <label for="nuevaCedula">Cédula / RUC (10 o 13 dígitos):</label>
-          <input type="text" id="nuevaCedula" placeholder="1700000000 or 1700000000001" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" title="Debe ser de 10 dígitos (Cédula) o 13 dígitos (RUC)" required>
+          <input type="text" id="nuevaCedula" placeholder="1700000000" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" required>
         </div>
         <div class="form-group">
           <label for="nuevoMedidor">N° Medidor:</label>
@@ -312,7 +302,7 @@
         </div>
         <div class="form-group">
           <label for="nuevoTelefono">Teléfono / WhatsApp (10 dígitos, empieza por 0):</label>
-          <input type="tel" id="nuevoTelefono" placeholder="0999999999" pattern="0\d{9}" maxlength="10" inputmode="numeric" title="Debe empezar por 0 y tener 10 dígitos en total" required>
+          <input type="tel" id="nuevoTelefono" placeholder="0999999999" pattern="0\d{9}" maxlength="10" inputmode="numeric" required>
         </div>
         <div class="form-group">
           <label for="lecturaInicial">Lectura / Consumo Inicial (m³):</label>
@@ -329,10 +319,10 @@
     </div>
   </div>
 
+  <!-- MODAL GESTIÓN USUARIOS -->
   <div id="modalGestionUsuarios" class="modal">
     <div class="modal-content modal-large">
       <span class="close-modal" onclick="cerrarModalGestionUsuarios()">&times;</span>
-      
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
         <h3>👥 Gestión y Modificación de Usuarios</h3>
         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
@@ -344,7 +334,6 @@
           <button class="btn btn-success" onclick="ejecutarExportacionUsuarios()">📥 Exportar</button>
         </div>
       </div>
-
       <div class="table-responsive">
         <table>
           <thead>
@@ -368,7 +357,7 @@
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalCredenciales()">&times;</span>
       <h3>🔑 Gestión de Cuentas de Acceso (Admin)</h3>
-      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">Cree nuevos usuarios autorizados para ingresar al sistema.</p>
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">Cree nuevos usuarios o restablezca claves de acceso.</p>
       
       <form id="formNuevoAdmin" class="modal-form" style="margin-bottom: 20px;">
         <div class="form-group">
@@ -397,6 +386,7 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR SOCIO -->
   <div id="modalEditarSocio" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalEditarSocio()">&times;</span>
@@ -434,6 +424,7 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR LECTURA -->
   <div id="modalEditar" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalEditar()">&times;</span>
@@ -455,11 +446,11 @@
     </div>
   </div>
 
-  <!-- NUEVO MODAL: MODIFICAR CONTRASEÑA DE ADMINISTRADOR -->
+  <!-- MODAL: MODIFICAR CONTRASEÑA DE ADMINISTRADOR -->
   <div id="modalEditarAdmin" class="modal">
     <div class="modal-content">
       <span class="close-modal" onclick="cerrarModalEditarAdmin()">&times;</span>
-      <h3>🔑 Modificar Contraseña de Administrador</h3>
+      <h3>🔑 Modificar / Restablecer Contraseña</h3>
       <form id="formEditarAdmin" class="modal-form">
         <input type="hidden" id="editAdminFirestoreId">
         <div class="form-group">
