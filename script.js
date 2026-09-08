@@ -323,7 +323,6 @@ async function registrarNuevoAdmin(e) {
   alert("✅ Cuenta de administrador creada con éxito.");
 }
 
-// Funciones para Editar Administrador (Usuario y Contraseña)
 function abrirModalEditarAdmin(firestoreId) {
   const admin = administradores.find(a => a.firestoreId === firestoreId);
   if (admin) {
@@ -350,7 +349,6 @@ async function guardarEdicionAdmin(e) {
     return;
   }
 
-  // Verificar si el nombre de usuario ya está en uso por otro admin
   const usuarioExistente = administradores.find(a => a.usuario.toLowerCase() === nuevoUsuario.toLowerCase() && a.firestoreId !== firestoreId);
   if (usuarioExistente) {
     alert("⚠️ Este nombre de usuario ya está en uso por otra cuenta.");
