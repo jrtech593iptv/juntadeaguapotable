@@ -1187,3 +1187,29 @@ function generarPDFPlanilla(id) {
 
   doc.save(`Planilla_${socio?.nombre || 'Socio'}_${lectura.fecha}.pdf`);
 }
+// Exponer funciones al objeto global window para su uso en eventos onclick del HTML
+window.cambiarPestana = cambiarPestana;
+window.abrirModalSocio = abrirModalSocio;
+window.cerrarModalSocio = cerrarModalSocio;
+window.abrirModalGestionUsuarios = abrirModalGestionUsuarios;
+window.cerrarModalGestionUsuarios = cerrarModalGestionUsuarios;
+window.cerrarModalEditar = cerrarModalEditar;
+window.abrirModalCredenciales = abrirModalCredenciales;
+window.cerrarModalCredenciales = cerrarModalCredenciales;
+window.eliminarAdmin = eliminarAdmin;
+window.abrirModalEditarSocio = abrirModalEditarSocio;
+window.cerrarModalEditarSocio = cerrarModalEditarSocio;
+window.guardarCapitalInicial = guardarCapitalInicial;
+window.eliminarSocio = eliminarSocio;
+window.marcarComoPagado = marcarComoPagado;
+window.enviarPorWhatsApp = enviarPorWhatsApp;
+window.enviarPorCorreo = enviarPorCorreo;
+window.abrirEdicion = abrirEdicion;
+window.eliminarLectura = eliminarLectura;
+window.eliminarGasto = eliminarGasto;
+window.ejecutarExportacionLecturas = ejecutarExportacionLecturas;
+window.ejecutarExportacionUsuarios = ejecutarExportacionUsuarios;
+window.exportarPDFContabilidadMensual = exportarPDFContabilidadMensual;
+window.generarPDFPlanilla = generarPDFPlanilla;
+window.cerrarSesion = cerrarSesion;
+window.toggleModoOscuro = toggleModoOscuro;
