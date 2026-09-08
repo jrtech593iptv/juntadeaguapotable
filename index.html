@@ -1,482 +1,203 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Junta de Agua Potable - Gestión y Contabilidad</title>
-  <link rel="stylesheet" href="styles.css">
-  
-  <!-- Librerías para exportación en PDF y XLS (Excel) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body class="bloqueado">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  <!-- MODAL DE INICIO DE SESIÓN -->
-  <div id="modalLogin" class="modal" style="display: flex;">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-      <h3 style="color: var(--primary); margin-bottom: 15px;">🔒 Acceso al Sistema</h3>
-      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px;">Junta de Agua Potable TOLONTAG</p>
-      
-      <form id="formLogin" class="modal-form">
-        <div class="form-group" style="text-align: left;">
-          <label for="usuarioLogin">Usuario:</label>
-          <input type="text" id="usuarioLogin" placeholder="Ingrese su usuario" required>
-        </div>
-        <div class="form-group" style="text-align: left;">
-          <label for="passwordLogin">Contraseña:</label>
-          <input type="password" id="passwordLogin" placeholder="Ingrese su contraseña" required>
-        </div>
-        <div class="form-actions" style="margin-top: 15px;">
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Ingresar al Sistema</button>
-        </div>
-      </form>
-    </div>
-  </div>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "juntaaguapotable-56728.firebaseapp.com",
+  projectId: "juntaaguapotable-56728",
+  storageBucket: "juntaaguapotable-56728.firebasestorage.app",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
 
-  <header class="navbar">
-    <div class="container nav-container">
-      <div>
-        <h1>🚰 Junta de Agua Potable TOLONTAG</h1>
-        <span class="subtitle">Sistema de Lecturas, Facturación y Contabilidad</span>
-      </div>
-      
-      <!-- Reloj, Fecha, Modo Oscuro y Control de Sesión -->
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <div class="reloj-container">
-          <div id="textoReloj">🕒 00:00:00</div>
-          <div id="textoFecha">📅 Cargando fecha...</div>
-        </div>
-        <button class="btn btn-secondary" onclick="toggleModoOscuro()" id="btnModoOscuro" style="font-size: 0.85rem; padding: 8px 12px;" title="Cambiar modo oscuro / claro">🌙 Modo Oscuro</button>
-        <button class="btn btn-warning" onclick="abrirModalCredenciales()" style="font-size: 0.85rem; padding: 8px 12px;" title="Administrar cuentas de acceso">🔑 Cuentas Admin</button>
-        <button class="btn btn-danger" onclick="cerrarSesion()" style="font-size: 0.85rem; padding: 8px 12px;" title="Cerrar sesión actual">🚪 Cerrar Sesión</button>
-      </div>
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-      <nav class="nav-tabs">
-        <button class="tab-btn active" onclick="cambiarPestana('facturacion')">📋 Facturación y Lecturas</button>
-        <button class="tab-btn" onclick="cambiarPestana('contabilidad')">📊 Contabilidad y Caja</button>
-      </nav>
-    </div>
-  </header>
+let administradores = [];
+let socios = [];
+let lecturas = [];
+let egresos = [];
+let capitalesMensuales = {};
 
-  <main class="container main-content">
+const administradoresDefault = [{ usuario: "admin", password: "1234" }];
 
-    <!-- SECCIÓN 1: FACTURACIÓN Y LECTURAS -->
-    <div id="sec-facturacion" class="tab-content active">
-      
-      <!-- Formulario Registrar Lectura -->
-      <section class="card">
-        <div class="card-header">
-          <h2>📝 Registrar Nueva Lectura</h2>
-          <div class="action-buttons">
-            <button type="button" class="btn btn-secondary" onclick="abrirModalSocio()">➕ Nuevo Registro de Usuario</button>
-            <button type="button" class="btn btn-danger" onclick="abrirModalGestionUsuarios()">👥 Gestionar / Editar Usuarios</button>
+async function cargarDatosDesdeFirebase() {
+  try {
+    const snapAdmins = await getDocs(collection(db, "administradores"));
+    if (snapAdmins.empty) {
+      for (let admin of administradoresDefault) {
+        await addDoc(collection(db, "administradores"), admin);
+      }
+      administradores = [...administradoresDefault];
+    } else {
+      administradores = snapAdmins.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+  } catch (error) {
+    console.error("Error al conectar con Firestore:", error);
+  }
+  inicializarInterfazSistema();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  cargarDatosDesdeFirebase();
+});
+
+function inicializarInterfazSistema() {
+  const formLogin = document.getElementById('formLogin');
+  if (formLogin) {
+    formLogin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('usuarioLogin').value.trim();
+      const pass = document.getElementById('passwordLogin').value.trim();
+      const adminEncontrado = administradores.find(a => a.usuario === user && a.password === pass);
+
+      if (adminEncontrado) {
+        document.getElementById('modalLogin').style.display = 'none';
+        document.body.classList.remove('bloqueado');
+        alert("✅ ¡Bienvenido " + adminEncontrado.usuario + "!");
+      } else {
+        alert("❌ Usuario o contraseña incorrectos.");
+      }
+    });
+  }
+
+  const formNuevoAdmin = document.getElementById('formNuevoAdmin');
+  if (formNuevoAdmin) formNuevoAdmin.addEventListener('submit', registrarNuevoAdmin);
+
+  const formEditarAdmin = document.getElementById('formEditarAdmin');
+  if (formEditarAdmin) formEditarAdmin.addEventListener('submit', guardarEdicionAdmin);
+}
+
+function abrirModalCredenciales() {
+  renderizarTablaAdmins();
+  document.getElementById('modalCredenciales').style.display = "flex";
+}
+
+function cerrarModalCredenciales() {
+  document.getElementById('modalCredenciales').style.display = "none";
+}
+
+async function registrarNuevoAdmin(e) {
+  e.preventDefault();
+  const usuario = document.getElementById('nuevoAdminUser').value.trim();
+  const password = document.getElementById('nuevoAdminPass').value.trim();
+
+  if (administradores.some(a => a.usuario.toLowerCase() === usuario.toLowerCase())) {
+    alert("⚠️ El nombre de usuario ya existe.");
+    return;
+  }
+
+  const nuevoAdmin = { usuario, password };
+  const docRef = await addDoc(collection(db, "administradores"), nuevoAdmin);
+  nuevoAdmin.firestoreId = docRef.id;
+
+  administradores.push(nuevoAdmin);
+  renderizarTablaAdmins();
+  document.getElementById('formNuevoAdmin').reset();
+  alert("✅ Administrador creado con éxito.");
+}
+
+function abrirModalEditarAdmin(firestoreId) {
+  const admin = administradores.find(a => a.firestoreId === firestoreId);
+  if (admin) {
+    document.getElementById('editAdminFirestoreId').value = admin.firestoreId;
+    document.getElementById('editAdminUser').value = admin.usuario;
+    document.getElementById('editAdminNewPass').value = "";
+    document.getElementById('modalEditarAdmin').style.display = "flex";
+  }
+}
+
+function cerrarModalEditarAdmin() {
+  document.getElementById('modalEditarAdmin').style.display = "none";
+  document.getElementById('formEditarAdmin').reset();
+}
+
+async function guardarEdicionAdmin(e) {
+  e.preventDefault();
+  const firestoreId = document.getElementById('editAdminFirestoreId').value;
+  const nuevoUsuario = document.getElementById('editAdminUser').value.trim();
+  const nuevaPassword = document.getElementById('editAdminNewPass').value.trim();
+
+  if (!nuevoUsuario) {
+    alert("⚠️ El nombre de usuario no puede estar vacío.");
+    return;
+  }
+
+  const admin = administradores.find(a => a.firestoreId === firestoreId);
+  if (admin) {
+    admin.usuario = nuevoUsuario;
+    const datosActualizacion = { usuario: nuevoUsuario };
+
+    if (nuevaPassword) {
+      admin.password = nuevaPassword;
+      datosActualizacion.password = nuevaPassword;
+    }
+
+    await updateDoc(doc(db, "administradores", firestoreId), datosActualizacion);
+    cerrarModalEditarAdmin();
+    renderizarTablaAdmins();
+    alert(`✅ Información de administrador actualizada con éxito.`);
+  }
+}
+
+function renderizarTablaAdmins() {
+  const tbody = document.getElementById('tablaAdminsBody');
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  administradores.forEach((admin) => {
+    let botonEliminar = administradores.length > 1 
+      ? `<button class="action-btn btn-delete" onclick="eliminarAdmin('${admin.firestoreId}')">🗑️ Eliminar</button>` 
+      : `<small style="color: var(--text-light);">Principal</small>`;
+
+    const botonEditar = `<button class="action-btn btn-edit" onclick="abrirModalEditarAdmin('${admin.firestoreId}')">✏️ Editar Info</button>`;
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${admin.usuario}</strong></td>
+        <td>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            ${botonEditar}
+            ${botonEliminar}
           </div>
-        </div>
-        
-        <form id="formLectura" class="grid-form">
-          <div class="form-group">
-            <label for="inputPeriodoPago">📅 Período de Pago:</label>
-            <input type="month" id="inputPeriodoPago" required>
-          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
 
-          <div class="form-group">
-            <label for="inputFiltroSocio">🔍 Buscar Socio (Nombre / Medidor):</label>
-            <input type="text" id="inputFiltroSocio" placeholder="Escriba para filtrar lista...">
-          </div>
+async function eliminarAdmin(firestoreId) {
+  if (administradores.length <= 1) {
+    alert("⚠️ No puede eliminar el último administrador.");
+    return;
+  }
+  if (confirm("¿Está seguro de eliminar esta cuenta?")) {
+    await deleteDoc(doc(db, "administradores", firestoreId));
+    administradores = administradores.filter(a => a.firestoreId !== firestoreId);
+    renderizarTablaAdmins();
+  }
+}
 
-          <div class="form-group">
-            <label for="selectSocio">Socio / Usuario:</label>
-            <select id="selectSocio" required>
-              <option value="">-- Seleccione un Socio --</option>
-            </select>
-          </div>
+function toggleModoOscuro() {
+  const esOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (esOscuro) {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+}
 
-          <div class="form-group">
-            <label for="inputMedidor">N° Medidor:</label>
-            <input type="text" id="inputMedidor" readonly placeholder="Auto-completado">
-          </div>
+function cerrarSesion() {
+  if (confirm("¿Desea cerrar sesión?")) {
+    document.body.classList.add('bloqueado');
+    document.getElementById('modalLogin').style.display = 'flex';
+  }
+}
 
-          <div class="form-group">
-            <label for="inputAnterior">Lectura Anterior (m³):</label>
-            <input type="number" id="inputAnterior" readonly placeholder="Auto-completado" style="cursor: not-allowed;">
-          </div>
-
-          <div class="form-group">
-            <label for="inputActual">Lectura Actual (m³):</label>
-            <input type="number" id="inputActual" min="0" step="1" required placeholder="0">
-          </div>
-
-          <div class="form-group">
-            <label for="inputConsumoCalculado">Consumo Calculado (m³):</label>
-            <input type="text" id="inputConsumoCalculado" readonly placeholder="0 m³" style="font-weight: bold; color: var(--primary);">
-          </div>
-
-          <div class="form-group">
-            <label for="inputValorCalculado">Total Estimado ($):</label>
-            <input type="text" id="inputValorCalculado" readonly placeholder="$0.00" style="font-weight: bold; color: var(--success);">
-          </div>
-
-          <div class="form-group full-width form-actions-compact">
-            <button type="submit" class="btn btn-primary">💾 Guardar Lectura</button>
-            <button type="button" class="btn btn-warning" onclick="limpiarFormularioLectura()">🧹 Borrar Campos / Limpiar</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Tabla Registros de Consumo con Selector de Exportación -->
-      <section class="card">
-        <div class="card-header">
-          <h2>📋 Registros y Facturas</h2>
-          <div class="action-buttons" style="align-items: center; gap: 10px;">
-            <div class="search-box">
-              <input type="text" id="inputBuscar" placeholder="🔍 Buscar por nombre, cédula o medidor...">
-            </div>
-            <!-- Selector de Opciones de Exportación -->
-            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <select id="selectFormatoExportar" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
-                <option value="">-- Seleccionar Formato --</option>
-                <option value="pdf">📄 Exportar a PDF</option>
-                <option value="xls">📊 Exportar a XLS (Excel)</option>
-              </select>
-              <button class="btn btn-success" onclick="ejecutarExportacionLecturas()">📥 Exportar</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table id="tablaLecturas">
-            <thead>
-              <tr>
-                <th>Período</th>
-                <th>Socio / Cédula</th>
-                <th>Medidor</th>
-                <th>Anterior</th>
-                <th>Actual</th>
-                <th>Consumo</th>
-                <th>Total ($)</th>
-                <th>Estado / F. Pago</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tablaBody">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-        <div class="card-footer">
-          <span id="totalPlanillas">Total: 0</span>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- SECCIÓN 2: CONTABILIDAD Y CAJA -->
-    <div id="sec-contabilidad" class="tab-content">
-      
-      <!-- Indicadores KPIs Contables -->
-      <section class="kpi-grid">
-        <div class="kpi-card kpi-capital">
-          <h3>Capital Inicial del Mes</h3>
-          <p id="kpiCapitalDisplay">$0.00</p>
-        </div>
-        <div class="kpi-card kpi-ingresos">
-          <h3>Ingresos Totales (Cobrados)</h3>
-          <p id="kpiIngresos">$0.00</p>
-        </div>
-        <div class="kpi-card kpi-gastos">
-          <h3>Egresos Totales (Gastos)</h3>
-          <p id="kpiGastos">$0.00</p>
-        </div>
-        <div class="kpi-card kpi-balance">
-          <h3>Balance Total en Caja</h3>
-          <p id="kpiBalance">$0.00</p>
-        </div>
-      </section>
-
-      <!-- Configuración de Capital Inicial Mensual -->
-      <section class="card" style="border: 1px dashed var(--primary);">
-        <h2>⚙️ Configurar Capital Inicial de Caja (Mensual)</h2>
-        <div class="grid-form" style="margin-top: 15px; align-items: flex-end;">
-          <div class="form-group">
-            <label for="inputConfigMes">Seleccionar Mes a Iniciar:</label>
-            <input type="month" id="inputConfigMes" class="form-control" style="padding: 10px; font-size: 0.95rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
-          </div>
-          <div class="form-group">
-            <label for="inputCapitalInicial">Monto Capital Inicial para el Mes Seleccionado ($):</label>
-            <input type="number" id="inputCapitalInicial" min="0" step="0.01" placeholder="0.00">
-          </div>
-          <div class="form-group">
-            <button type="button" class="btn btn-success" onclick="guardarCapitalInicial()">💾 Guardar Capital del Mes</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Formulario Registrar Egreso -->
-      <section class="card">
-        <h2>💸 Registrar Egreso / Gasto Operativo</h2>
-        <form id="formGasto" class="grid-form">
-          <div class="form-group">
-            <label for="gastoFecha">Fecha:</label>
-            <input type="date" id="gastoFecha" required>
-          </div>
-          <div class="form-group">
-            <label for="gastoCategoria">Categoría:</label>
-            <select id="gastoCategoria" required>
-              <option value="Mantenimiento y Reparación">Mantenimiento y Reparación</option>
-              <option value="Sueldos / Personal">Sueldos / Personal</option>
-              <option value="Energía Eléctrica (Bombas)">Energía Eléctrica (Bombas)</option>
-              <option value="Químicos / Tratamiento">Químicos / Tratamiento de Agua</option>
-              <option value="Materiales y Tubos">Materiales y Tubos</option>
-              <option value="Servicios Administrativos">Servicios Administrativos</option>
-              <option value="Otros Gastos">Otros Gastos</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="gastoDescripcion">Descripción / Concepto:</label>
-            <input type="text" id="gastoDescripcion" placeholder="Ej: Compra de tubos PVC" required>
-          </div>
-          <div class="form-group">
-            <label for="gastoMonto">Monto ($):</label>
-            <input type="number" id="gastoMonto" min="0.01" step="0.01" placeholder="0.00" required>
-          </div>
-          <div class="form-group full-width">
-            <button type="submit" class="btn btn-danger">📉 Registrar Egreso</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Libro Diario de Caja -->
-      <section class="card">
-        <div class="card-header">
-          <h2>📖 Libro Diario de Caja (Ingresos y Egresos)</h2>
-          <div class="action-buttons" style="align-items: center; gap: 10px;">
-            <div style="display: flex; gap: 5px; align-items: center;">
-              <label for="filtroMesContabilidad" style="font-size: 0.85rem;">Mes Visualizado:</label>
-              <input type="month" id="filtroMesContabilidad" class="form-control" style="padding: 6px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
-            </div>
-            <button class="btn btn-success" onclick="exportarPDFContabilidadMensual()" style="padding: 6px 12px; font-size: 0.85rem;">📄 Exportar Mensual PDF</button>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>Categoría / Origen</th>
-                <th>Detalle</th>
-                <th>Ingreso ($)</th>
-                <th>Egreso ($)</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tablaMovimientosBody">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
-
-  </main>
-
-  <!-- Pie de página institucional y de autoría -->
-  <footer class="site-footer">
-    <div class="container">
-      <p>Sistema desarrollado por <strong>César Oña - JR TECH</strong></p>
-      <p>Celular: <strong>096 105 7798</strong> | Email: <strong>cesaralexisoi@live.com</strong></p>
-    </div>
-  </footer>
-
-  <!-- Modales -->
-  <div id="modalSocio" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="cerrarModalSocio()">&times;</span>
-      <h3>👤 Nuevo Registro de Usuario</h3>
-      <form id="formNuevoSocio" class="modal-form">
-        <div class="form-group">
-          <label for="nuevoNombre">Nombre Completo (Solo texto):</label>
-          <input type="text" id="nuevoNombre" placeholder="Ej: Fernando Acurio" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" required>
-        </div>
-        <div class="form-group">
-          <label for="nuevaCedula">Cédula / RUC (10 o 13 dígitos):</label>
-          <input type="text" id="nuevaCedula" placeholder="1700000000 or 1700000000001" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" title="Debe ser de 10 dígitos (Cédula) o 13 dígitos (RUC)" required>
-        </div>
-        <div class="form-group">
-          <label for="nuevoMedidor">N° Medidor:</label>
-          <input type="text" id="nuevoMedidor" placeholder="MED-005" required>
-        </div>
-        <div class="form-group">
-          <label for="nuevoTelefono">Teléfono / WhatsApp (10 dígitos, empieza por 0):</label>
-          <input type="tel" id="nuevoTelefono" placeholder="0999999999" pattern="0\d{9}" maxlength="10" inputmode="numeric" title="Debe empezar por 0 y tener 10 dígitos en total" required>
-        </div>
-        <div class="form-group">
-          <label for="lecturaInicial">Lectura / Consumo Inicial (m³):</label>
-          <input type="number" id="lecturaInicial" min="0" step="1" value="0" required placeholder="0">
-        </div>
-        <div class="form-group">
-          <label for="nuevoCorreo">Correo Electrónico:</label>
-          <input type="email" id="nuevoCorreo" placeholder="correo@ejemplo.com" required>
-        </div>
-        <div class="form-actions" style="margin-top: 15px;">
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Registrar Usuario</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="modalGestionUsuarios" class="modal">
-    <div class="modal-content modal-large">
-      <span class="close-modal" onclick="cerrarModalGestionUsuarios()">&times;</span>
-      
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-        <h3>👥 Gestión y Modificación de Usuarios</h3>
-        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-          <select id="selectFormatoExportarUsuarios" class="form-control" style="padding: 8px; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; background-color: var(--card-bg); color: var(--text);">
-            <option value="">-- Seleccionar Formato --</option>
-            <option value="pdf">📄 Exportar a PDF</option>
-            <option value="xls">📊 Exportar a XLS (Excel)</option>
-          </select>
-          <button class="btn btn-success" onclick="ejecutarExportacionUsuarios()">📥 Exportar</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Cédula</th>
-              <th>Medidor</th>
-              <th>Teléfono</th>
-              <th>Lect. Inicial</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaUsuariosBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE GESTIÓN DE CREDENCIALES / ADMINISTRADORES -->
-  <div id="modalCredenciales" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="cerrarModalCredenciales()">&times;</span>
-      <h3>🔑 Gestión de Cuentas de Acceso (Admin)</h3>
-      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 15px;">Cree nuevos usuarios autorizados para ingresar al sistema, edite sus nombres de usuario o contraseña.</p>
-      
-      <form id="formNuevoAdmin" class="modal-form" style="margin-bottom: 20px;">
-        <div class="form-group">
-          <label for="nuevoAdminUser">Nombre de Usuario:</label>
-          <input type="text" id="nuevoAdminUser" placeholder="Ej: operador2" required>
-        </div>
-        <div class="form-group">
-          <label for="nuevoAdminPass">Contraseña:</label>
-          <input type="password" id="nuevoAdminPass" placeholder="Contraseña segura" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">➕ Registrar Nuevo Administrador</button>
-      </form>
-
-      <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--primary);">Usuarios Administradores Actuales:</h4>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaAdminsBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div id="modalEditarSocio" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="cerrarModalEditarSocio()">&times;</span>
-      <h3>✏️ Modificar Información de Usuario</h3>
-      <form id="formEditarSocio" class="modal-form">
-        <input type="hidden" id="editSocioId">
-        <div class="form-group">
-          <label for="editSocioNombre">Nombre Completo:</label>
-          <input type="text" id="editSocioNombre" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" required>
-        </div>
-        <div class="form-group">
-          <label for="editSocioCedula">Cédula / RUC:</label>
-          <input type="text" id="editSocioCedula" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" required>
-        </div>
-        <div class="form-group">
-          <label for="editSocioMedidor">N° Medidor:</label>
-          <input type="text" id="editSocioMedidor" required>
-        </div>
-        <div class="form-group">
-          <label for="editSocioTelefono">Teléfono / WhatsApp:</label>
-          <input type="tel" id="editSocioTelefono" pattern="0\d{9}" maxlength="10" inputmode="numeric" required>
-        </div>
-        <div class="form-group">
-          <label for="editSocioLectura">Lectura Inicial (m³):</label>
-          <input type="number" id="editSocioLectura" min="0" step="1" required>
-        </div>
-        <div class="form-group">
-          <label for="editSocioCorreo">Correo Electrónico:</label>
-          <input type="email" id="editSocioCorreo" required>
-        </div>
-        <div class="form-actions" style="margin-top: 15px;">
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Guardar Cambios</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="modalEditar" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="cerrarModalEditar()">&times;</span>
-      <h3>✏️ Editar Lectura</h3>
-      <form id="formEditar">
-        <input type="hidden" id="editId">
-        <div class="form-group">
-          <label for="editAnterior">Lectura Anterior (m³):</label>
-          <input type="number" id="editAnterior" readonly style="cursor: not-allowed;">
-        </div>
-        <div class="form-group">
-          <label for="editActual">Lectura Actual (m³):</label>
-          <input type="number" id="editActual" required>
-        </div>
-        <div class="form-actions" style="margin-top: 15px;">
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Actualizar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: MODIFICAR / EDITAR ADMINISTRADOR (Usuario y Contraseña) -->
-  <div id="modalEditarAdmin" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="cerrarModalEditarAdmin()">&times;</span>
-      <h3>✏️ Editar Información de Administrador</h3>
-      <form id="formEditarAdmin" class="modal-form">
-        <input type="hidden" id="editAdminFirestoreId">
-        <div class="form-group">
-          <label for="editAdminUser">Nombre de Usuario:</label>
-          <input type="text" id="editAdminUser" placeholder="Nuevo nombre de usuario" required>
-        </div>
-        <div class="form-group">
-          <label for="editAdminNewPass">Nueva Contraseña (dejar en blanco para no cambiar):</label>
-          <input type="password" id="editAdminNewPass" placeholder="Nueva contraseña segura">
-        </div>
-        <div class="form-actions" style="margin-top: 15px;">
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Guardar Cambios</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="script.js"></script>
-</body>
-</html>
+window.abrirModalCredenciales = abrirModalCredenciales;
+window.cerrarModalCredenciales = cerrarModalCredenciales;
+window.abrirModalEditarAdmin = abrirModalEditarAdmin;
+window.cerrarModalEditarAdmin = cerrarModalEditarAdmin;
+window.eliminarAdmin = eliminarAdmin;
+window.toggleModoOscuro = toggleModoOscuro;
+window.cerrarSesion = cerrarSesion;[cite: 17]
