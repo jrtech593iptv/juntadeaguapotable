@@ -10,6 +10,24 @@
   --warning: #d97706;
   --danger: #dc2626;
   --secondary: #475569;
+  --table-head-bg: #f1f5f9;
+  --input-readonly-bg: #e2e8f0;
+}
+
+[data-theme="dark"] {
+  --primary: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --bg: #0f172a;
+  --card-bg: #1e293b;
+  --text: #f8fafc;
+  --text-light: #94a3b8;
+  --border: #334155;
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --secondary: #64748b;
+  --table-head-bg: #1e293b;
+  --input-readonly-bg: #0f172a;
 }
 
 * {
@@ -24,6 +42,18 @@ body {
   color: var(--text);
   line-height: 1.5;
   padding-bottom: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Clases para el bloqueo del sistema antes del Login */
+body.bloqueado {
+  overflow: hidden;
+}
+
+body.bloqueado > *:not(#modalLogin) {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
 }
 
 .container {
@@ -63,6 +93,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  color: #ffffff;
 }
 
 #textoReloj {
@@ -116,6 +147,7 @@ body {
   margin-bottom: 24px;
   border: 1px solid var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .card h2 {
@@ -146,7 +178,7 @@ body {
 }
 
 .kpi-card {
-  background-color: white;
+  background-color: var(--card-bg);
   padding: 18px;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -166,10 +198,10 @@ body {
   font-weight: 700;
 }
 
-.kpi-capital p { color: #0284c7; }
+.kpi-capital p { color: var(--primary); }
 .kpi-ingresos p { color: var(--success); }
 .kpi-gastos p { color: var(--danger); }
-.kpi-balance p { color: #0f172a; }
+.kpi-balance p { color: var(--text); }
 
 .grid-form {
   display: grid;
@@ -219,6 +251,13 @@ input, select {
   border-radius: 6px;
   font-size: 0.95rem;
   width: 100%;
+  background-color: var(--card-bg);
+  color: var(--text);
+}
+
+input:read-only {
+  background-color: var(--input-readonly-bg);
+  cursor: not-allowed;
 }
 
 input:focus, select:focus {
@@ -265,7 +304,7 @@ th, td {
 }
 
 th {
-  background-color: #f1f5f9;
+  background-color: var(--table-head-bg);
   font-weight: 600;
   color: var(--text-light);
 }
@@ -322,10 +361,9 @@ th {
   font-weight: 600;
 }
 
-/* Estilos para el Pie de Página */
 .site-footer {
-  background-color: #1e293b;
-  color: #94a3b8;
+  background-color: var(--card-bg);
+  color: var(--text-light);
   text-align: center;
   padding: 20px 0;
   margin-top: 40px;
@@ -334,7 +372,7 @@ th {
 }
 
 .site-footer strong {
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .site-footer p + p {
@@ -353,7 +391,8 @@ th {
 }
 
 .modal-content {
-  background-color: white;
+  background-color: var(--card-bg);
+  color: var(--text);
   padding: 20px;
   border-radius: 8px;
   width: 100%;
@@ -364,6 +403,7 @@ th {
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
 }
 
 .modal-content.modal-large {
@@ -386,7 +426,8 @@ th {
   font-size: 1.6rem;
   cursor: pointer;
   z-index: 10;
-  background: white;
+  background: var(--card-bg);
+  color: var(--text);
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -397,11 +438,10 @@ th {
 }
 
 .close-modal:hover {
-  background-color: #f1f5f9;
+  background-color: var(--border);
   color: var(--danger);
 }
 
-/* RESPONSIVE DESIGN PARA DISPOSITIVOS MÓVILES */
 @media (max-width: 768px) {
   .nav-container {
     flex-direction: column;
