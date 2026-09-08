@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Agua Potable - Gestión Completa</title>
+  
+  <!-- Librería para Carga Masiva y Exportación a Excel (.xlsx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Librerías para Exportación a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Junta de Agua Potable Comunitaria</h1>
+      <p>Sistema de Gestión, Inscripción y Carga Masiva de Socios</p>
+    </header>
+
+    <!-- MÓDULO 1: CARGA MASIVA DESDE EXCEL -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">📂 Carga Masiva y Cotejo desde Excel</h2>
+      </div>
+      <div class="upload-container">
+        <input type="file" id="inputExcel" accept=".xlsx, .xls, .csv" />
+        <button class="btn-export btn-excel" onclick="cargarExcelMasivo()">
+          📥 Subir y Actualizar Base de Datos
+        </button>
+      </div>
+      <small class="help-text">El archivo debe contener las columnas: <b>Cedula, Nombres, Sector, Medidor, LecturaInicial, Telefono</b>.</small>
+    </section>
+
+    <!-- MÓDULO 2: REGISTRO MANUAL DE SOCIOS -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">👤 Registrar / Actualizar Socio Manualmente</h2>
+      </div>
+      <form id="socioForm" class="form-grid">
+        <div class="form-group">
+          <label for="cedula">Cédula / Identificación</label>
+          <input type="text" id="cedula" placeholder="Ej. 1712345678" required>
+        </div>
+
+        <div class="form-group">
+          <label for="nombres">Nombres y Apellidos</label>
+          <input type="text" id="nombres" placeholder="Ej. Juan Carlos Pérez" required>
+        </div>
+
+        <div class="form-group">
+          <label for="sector">Sector / Barrio / Comunidad</label>
+          <input type="text" id="sector" placeholder="Ej. Sector Central, Lote 12" required>
+        </div>
+
+        <div class="form-group">
+          <label for="numMedidor">Número de Medidor</label>
+          <input type="text" id="numMedidor" placeholder="Ej. MED-1050" required>
+        </div>
+
+        <div class="form-group">
+          <label for="lecturaInicial">Lectura Inicial (m³)</label>
+          <input type="number" id="lecturaInicial" value="0" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label for="telefono">Teléfono / Celular</label>
+          <input type="tel" id="telefono" placeholder="Ej. 0991234567">
+        </div>
+
+        <button type="submit" class="btn-submit">Guardar Socio</button>
+      </form>
+    </section>
+
+    <!-- MÓDULO 3: LISTA Y EXPORTACIÓN -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">
+          📋 Lista General de Socios
+          <span class="counter" id="totalSocios">Total: 0</span>
+        </h2>
+        
+        <div class="export-buttons">
+          <button class="btn-export btn-excel" onclick="exportarExcel()">
+            📊 Exportar Excel
+          </button>
+          <button class="btn-export btn-pdf" onclick="exportarPDF()">
+            📄 Exportar PDF
+          </button>
+          <button class="btn-export btn-danger" onclick="limpiarBaseDatos()">
+            🗑️ Vaciar Lista
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table id="tablaSocios">
+          <thead>
+            <tr>
+              <th>Cédula</th>
+              <th>Socio / Nombres y Apellidos</th>
+              <th>Sector / Ubicación</th>
+              <th>N° Medidor</th>
+              <th>L. Inicial</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Las filas se generan dinámicamente mediante JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
