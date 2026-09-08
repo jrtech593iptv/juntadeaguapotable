@@ -272,20 +272,20 @@
       <h3>👤 Nuevo Registro de Usuario</h3>
       <form id="formNuevoSocio" class="modal-form">
         <div class="form-group">
-          <label for="nuevoNombre">Nombre Completo:</label>
-          <input type="text" id="nuevoNombre" placeholder="Ej: Acurio Fernando" required>
+          <label for="nuevoNombre">Nombre Completo (Solo texto):</label>
+          <input type="text" id="nuevoNombre" placeholder="Ej: Fernando Acurio" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" title="Solo se permiten letras y espacios" required>
         </div>
         <div class="form-group">
-          <label for="nuevaCedula">Cédula / RUC:</label>
-          <input type="text" id="nuevaCedula" placeholder="1700000000" required>
+          <label for="nuevaCedula">Cédula / RUC (10 o 13 dígitos):</label>
+          <input type="text" id="nuevaCedula" placeholder="1700000000 o 1700000000001" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" title="Debe ser de 10 dígitos (Cédula) o 13 dígitos (RUC)" required>
         </div>
         <div class="form-group">
           <label for="nuevoMedidor">N° Medidor:</label>
           <input type="text" id="nuevoMedidor" placeholder="MED-005" required>
         </div>
         <div class="form-group">
-          <label for="nuevoTelefono">Teléfono / WhatsApp:</label>
-          <input type="tel" id="nuevoTelefono" placeholder="0999999999" required>
+          <label for="nuevoTelefono">Teléfono / WhatsApp (10 dígitos, empieza por 0):</label>
+          <input type="tel" id="nuevoTelefono" placeholder="0999999999" pattern="0\d{9}" maxlength="10" inputmode="numeric" title="Debe empezar por 0 y tener 10 dígitos en total" required>
         </div>
         <div class="form-group">
           <label for="lecturaInicial">Lectura / Consumo Inicial (m³):</label>
@@ -344,11 +344,11 @@
         <input type="hidden" id="editSocioId">
         <div class="form-group">
           <label for="editSocioNombre">Nombre Completo:</label>
-          <input type="text" id="editSocioNombre" required>
+          <input type="text" id="editSocioNombre" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+" required>
         </div>
         <div class="form-group">
           <label for="editSocioCedula">Cédula / RUC:</label>
-          <input type="text" id="editSocioCedula" required>
+          <input type="text" id="editSocioCedula" pattern="\d{10}|\d{13}" maxlength="13" inputmode="numeric" required>
         </div>
         <div class="form-group">
           <label for="editSocioMedidor">N° Medidor:</label>
@@ -356,7 +356,7 @@
         </div>
         <div class="form-group">
           <label for="editSocioTelefono">Teléfono / WhatsApp:</label>
-          <input type="tel" id="editSocioTelefono" required>
+          <input type="tel" id="editSocioTelefono" pattern="0\d{9}" maxlength="10" inputmode="numeric" required>
         </div>
         <div class="form-group">
           <label for="editSocioLectura">Lectura Inicial (m³):</label>
