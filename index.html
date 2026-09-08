@@ -455,6 +455,28 @@
     </div>
   </div>
 
+  <!-- NUEVO MODAL: MODIFICAR CONTRASEÑA DE ADMINISTRADOR -->
+  <div id="modalEditarAdmin" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalEditarAdmin()">&times;</span>
+      <h3>🔑 Modificar Contraseña de Administrador</h3>
+      <form id="formEditarAdmin" class="modal-form">
+        <input type="hidden" id="editAdminFirestoreId">
+        <div class="form-group">
+          <label for="editAdminUser">Usuario:</label>
+          <input type="text" id="editAdminUser" readonly style="cursor: not-allowed;">
+        </div>
+        <div class="form-group">
+          <label for="editAdminNewPass">Nueva Contraseña:</label>
+          <input type="password" id="editAdminNewPass" placeholder="Ingrese nueva contraseña" required>
+        </div>
+        <div class="form-actions" style="margin-top: 15px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Guardar Nueva Contraseña</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="script.js"></script>
 </body>
 </html>
