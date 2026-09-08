@@ -297,9 +297,11 @@ table {
   font-size: 0.9rem;
 }
 
+/* CORRECCIÓN: Garantizar que todas las celdas de las tablas hereden el color correcto según el tema */
 th, td {
   padding: 12px;
   border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 th {
