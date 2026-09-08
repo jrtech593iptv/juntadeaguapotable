@@ -3,6 +3,11 @@ const TARIFA_BASE = 2.50;
 const LIMITE_BASE = 20;
 const COSTO_EXCEDENTE = 0.25;
 
+// Credenciales administradoras almacenadas en LocalStorage (Por defecto: admin / 1234)
+let administradores = JSON.parse(localStorage.getItem('junta_admins')) || [
+  { usuario: "admin", password: "1234" }
+];
+
 let socios = JSON.parse(localStorage.getItem('junta_socios')) || [
   { id: 1, nombre: "Ana Patricia Morales", medidor: "MED-004", cedula: "1755667788", telefono: "0991112233", email: "ana.morales@example.com", lecturaInicial: 0 },
   { id: 2, nombre: "Carlos Alberto Rodríguez", medidor: "MED-003", cedula: "1711223344", telefono: "0992223344", email: "carlos.rod@example.com", lecturaInicial: 0 },
@@ -21,8 +26,38 @@ let egresos = JSON.parse(localStorage.getItem('junta_egresos')) || [
 
 let capitalesMensuales = JSON.parse(localStorage.getItem('junta_capitales_mensuales')) || {};
 
-// Inicialización de Eventos y Reloj
+// Inicialización de Eventos y Login
 document.addEventListener("DOMContentLoaded", () => {
+  // Cargar preferencia de modo oscuro guardada
+  inicializarModoOscuro();
+
+  // Lógica de Autenticación / Login multicuenta
+  const formLogin = document.getElementById('formLogin');
+  if (formLogin) {
+    formLogin.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('usuarioLogin').value.trim();
+      const pass = document.getElementById('passwordLogin').value.trim();
+
+      const adminEncontrado = administradores.find(a => a.usuario === user && a.password === pass);
+
+      if (adminEncontrado) {
+        document.getElementById('modalLogin').style.display = 'none';
+        document.body.classList.remove('bloqueado');
+        alert("✅ ¡Bienvenido al sistema, " + adminEncontrado.usuario + "!");
+      } else {
+        alert("❌ Usuario o contraseña incorrectos. Intente nuevamente.");
+        document.getElementById('passwordLogin').value = "";
+        document.getElementById('passwordLogin').focus();
+      }
+    });
+  }
+
+  const formNuevoAdmin = document.getElementById('formNuevoAdmin');
+  if (formNuevoAdmin) {
+    formNuevoAdmin.addEventListener('submit', registrarNuevoAdmin);
+  }
+
   document.getElementById('gastoFecha').valueAsDate = new Date();
   
   const anioMesActual = new Date().toISOString().slice(0, 7);
@@ -62,6 +97,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById('formEditar').onsubmit = guardarEdicion;
 });
+
+// Funciones para el Modo Oscuro
+function inicializarModoOscuro() {
+  const modoGuardado = localStorage.getItem('junta_modo_oscuro');
+  if (modoGuardado === 'true') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const btn = document.getElementById('btnModoOscuro');
+    if (btn) btn.innerText = "☀️ Modo Claro";
+  }
+}
+
+function toggleModoOscuro() {
+  const esOscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+  const btn = document.getElementById('btnModoOscuro');
+
+  if (esOscuro) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('junta_modo_oscuro', 'false');
+    if (btn) btn.innerText = "🌙 Modo Oscuro";
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('junta_modo_oscuro', 'true');
+    if (btn) btn.innerText = "☀️ Modo Claro";
+  }
+}
+
+// Función para Cerrar Sesión
+function cerrarSesion() {
+  if (confirm("¿Está seguro de que desea cerrar la sesión actual?")) {
+    document.getElementById('usuarioLogin').value = "";
+    document.getElementById('passwordLogin').value = "";
+    document.body.classList.add('bloqueado');
+    document.getElementById('modalLogin').style.display = 'flex';
+  }
+}
 
 function obtenerMesVisualizado() {
   const inputMes = document.getElementById('filtroMesContabilidad');
@@ -141,6 +211,67 @@ function abrirModalGestionUsuarios() { renderizarTablaUsuarios(); document.getEl
 function cerrarModalGestionUsuarios() { document.getElementById('modalGestionUsuarios').style.display = "none"; }
 function cerrarModalEditar() { document.getElementById('modalEditar').style.display = "none"; }
 
+function abrirModalCredenciales() {
+  renderizarTablaAdmins();
+  document.getElementById('modalCredenciales').style.display = "flex";
+}
+
+function cerrarModalCredenciales() {
+  document.getElementById('modalCredenciales').style.display = "none";
+  document.getElementById('formNuevoAdmin').reset();
+}
+
+function registrarNuevoAdmin(e) {
+  e.preventDefault();
+  const usuario = document.getElementById('nuevoAdminUser').value.trim();
+  const password = document.getElementById('nuevoAdminPass').value.trim();
+
+  if (administradores.some(a => a.usuario.toLowerCase() === usuario.toLowerCase())) {
+    alert("⚠️ El nombre de usuario ya existe. Elija otro.");
+    return;
+  }
+
+  administradores.push({ usuario, password });
+  localStorage.setItem('junta_admins', JSON.stringify(administradores));
+  renderizarTablaAdmins();
+  document.getElementById('formNuevoAdmin').reset();
+  alert("✅ Cuenta de administrador creada con éxito.");
+}
+
+function renderizarTablaAdmins() {
+  const tbody = document.getElementById('tablaAdminsBody');
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  administradores.forEach((admin, index) => {
+    let botonEliminar = '';
+    if (administradores.length > 1) {
+      botonEliminar = `<button class="action-btn btn-delete" onclick="eliminarAdmin(${index})">🗑️ Eliminar</button>`;
+    } else {
+      botonEliminar = `<small style="color: var(--text-light);">Principal</small>`;
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${admin.usuario}</strong></td>
+        <td>${botonEliminar}</td>
+      </tr>
+    `;
+  });
+}
+
+function eliminarAdmin(index) {
+  if (administradores.length <= 1) {
+    alert("⚠️ No puede eliminar el último administrador del sistema.");
+    return;
+  }
+  if (confirm(`¿Está seguro de eliminar la cuenta de administrador "${administradores[index].usuario}"?`)) {
+    administradores.splice(index, 1);
+    localStorage.setItem('junta_admins', JSON.stringify(administradores));
+    renderizarTablaAdmins();
+  }
+}
+
 function abrirModalEditarSocio(id) {
   const socio = socios.find(s => s.id === id);
   if (socio) {
@@ -207,9 +338,6 @@ function guardarCapitalInicial() {
   alert(`✅ Capital inicial para el período ${mes} guardado con éxito y campo limpiado.`);
 }
 
-// ----------------------------------------------------
-// VALIDACIONES PARA NUEVO REGISTRO DE USUARIO
-// ----------------------------------------------------
 function guardarNuevoSocio(e) {
   e.preventDefault();
 
@@ -218,7 +346,6 @@ function guardarNuevoSocio(e) {
   const telefono = document.getElementById('nuevoTelefono').value.trim();
   const medidorIngresado = document.getElementById('nuevoMedidor').value.trim();
 
-  // 1. Validar Nombre Completo (solo texto con letras y espacios, sin números ni símbolos extraños)
   const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
   if (!regexNombre.test(nombre)) {
     alert("⚠️ Error en el Nombre Completo: Solo se permite texto (letras y espacios).");
@@ -226,7 +353,6 @@ function guardarNuevoSocio(e) {
     return;
   }
 
-  // 2. Validar Cédula / RUC (Solo números: 10 dígitos para cédula o 13 para RUC)
   const regexCedulaRuc = /^\d{10}$|^\d{13}$/;
   if (!regexCedulaRuc.test(cedula)) {
     alert("⚠️ Error en Cédula / RUC: Debe contener únicamente números y tener exactamente 10 dígitos (Cédula) o 13 dígitos (RUC).");
@@ -234,15 +360,13 @@ function guardarNuevoSocio(e) {
     return;
   }
 
-  // 3. Validar Teléfono / WhatsApp (Solo 10 dígitos, empezando obligatoriamente por el "0")
   const regexTelefono = /^0\d{9}$/;
   if (!regexTelefono.test(telefono)) {
-    alert("⚠️ Error en Teléfono / WhatsApp: Debe tener exactamente 10 dígitos y empezar obligatoriamente con el número '0' (Ej: 0991234567).");
+    alert("⚠️ Error en Teléfono / WhatsApp: Debe tener exactamente 10 dígitos y empezar obligatoriamente con el número '0'.");
     document.getElementById('nuevoTelefono').focus();
     return;
   }
 
-  // Validar si el medidor ya existe
   const medidorExiste = socios.some(s => s.medidor.toLowerCase() === medidorIngresado.toLowerCase());
   if (medidorExiste) {
     alert(`⚠️ ATENCIÓN: El número de medidor "${medidorIngresado}" ya se encuentra registrado en el sistema con otro usuario.`);
@@ -274,7 +398,6 @@ function guardarEdicionSocio(e) {
   const telefono = document.getElementById('editSocioTelefono').value.trim();
   const medidorIngresado = document.getElementById('editSocioMedidor').value.trim();
 
-  // Validaciones en edición
   const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
   if (!regexNombre.test(nombre)) {
     alert("⚠️ Error en el Nombre Completo: Solo se permite texto.");
@@ -458,7 +581,7 @@ function renderizarLecturas() {
     `;
 
     const infoEstado = l.estado === 'Pagado'
-      ? `<span class="badge-paid">Pagado</span><br><small style="color: #64748b; font-weight: 500;">📅 ${l.fechaPago || 'N/A'}</small>`
+      ? `<span class="badge-paid">Pagado</span><br><small style="color: var(--text-light); font-weight: 500;">📅 ${l.fechaPago || 'N/A'}</small>`
       : `<span class="badge-pending">Pendiente</span>`;
 
     tbody.innerHTML += `
