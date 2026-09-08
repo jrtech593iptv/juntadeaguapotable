@@ -4,12 +4,12 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } 
 
 // Tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBXLGN_B98q4vywcgpBKUBsAALxxEIKIU",
-  authDomain: "juntaaguapotable-60fd0.firebaseapp.com",
-  projectId: "juntaaguapotable-60fd0",
-  storageBucket: "juntaaguapotable-60fd0.firebasestorage.app",
-  messagingSenderId: "501991940368",
-  appId: "1:501991940368:web:b748213ab32aafc6574595"
+  apiKey: "TU_API_KEY",
+  authDomain: "juntaaguapotable-56728.firebaseapp.com",
+  projectId: "juntaaguapotable-56728",
+  storageBucket: "juntaaguapotable-56728.firebasestorage.app",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
 // Inicializar Firebase y Firestore
