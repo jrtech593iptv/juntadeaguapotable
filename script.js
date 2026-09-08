@@ -207,10 +207,42 @@ function guardarCapitalInicial() {
   alert(`✅ Capital inicial para el período ${mes} guardado con éxito y campo limpiado.`);
 }
 
+// ----------------------------------------------------
+// VALIDACIONES PARA NUEVO REGISTRO DE USUARIO
+// ----------------------------------------------------
 function guardarNuevoSocio(e) {
   e.preventDefault();
+
+  const nombre = document.getElementById('nuevoNombre').value.trim();
+  const cedula = document.getElementById('nuevaCedula').value.trim();
+  const telefono = document.getElementById('nuevoTelefono').value.trim();
   const medidorIngresado = document.getElementById('nuevoMedidor').value.trim();
 
+  // 1. Validar Nombre Completo (solo texto con letras y espacios, sin números ni símbolos extraños)
+  const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  if (!regexNombre.test(nombre)) {
+    alert("⚠️ Error en el Nombre Completo: Solo se permite texto (letras y espacios).");
+    document.getElementById('nuevoNombre').focus();
+    return;
+  }
+
+  // 2. Validar Cédula / RUC (Solo números: 10 dígitos para cédula o 13 para RUC)
+  const regexCedulaRuc = /^\d{10}$|^\d{13}$/;
+  if (!regexCedulaRuc.test(cedula)) {
+    alert("⚠️ Error en Cédula / RUC: Debe contener únicamente números y tener exactamente 10 dígitos (Cédula) o 13 dígitos (RUC).");
+    document.getElementById('nuevaCedula').focus();
+    return;
+  }
+
+  // 3. Validar Teléfono / WhatsApp (Solo 10 dígitos, empezando obligatoriamente por el "0")
+  const regexTelefono = /^0\d{9}$/;
+  if (!regexTelefono.test(telefono)) {
+    alert("⚠️ Error en Teléfono / WhatsApp: Debe tener exactamente 10 dígitos y empezar obligatoriamente con el número '0' (Ej: 0991234567).");
+    document.getElementById('nuevoTelefono').focus();
+    return;
+  }
+
+  // Validar si el medidor ya existe
   const medidorExiste = socios.some(s => s.medidor.toLowerCase() === medidorIngresado.toLowerCase());
   if (medidorExiste) {
     alert(`⚠️ ATENCIÓN: El número de medidor "${medidorIngresado}" ya se encuentra registrado en el sistema con otro usuario.`);
@@ -219,10 +251,10 @@ function guardarNuevoSocio(e) {
 
   const nuevoSocio = {
     id: Date.now(),
-    nombre: document.getElementById('nuevoNombre').value.trim(),
-    cedula: document.getElementById('nuevaCedula').value.trim(),
+    nombre: nombre,
+    cedula: cedula,
     medidor: medidorIngresado,
-    telefono: document.getElementById('nuevoTelefono').value.trim(),
+    telefono: telefono,
     email: document.getElementById('nuevoCorreo').value.trim(),
     lecturaInicial: parseFloat(document.getElementById('lecturaInicial').value) || 0
   };
@@ -237,7 +269,29 @@ function guardarNuevoSocio(e) {
 function guardarEdicionSocio(e) {
   e.preventDefault();
   const id = parseInt(document.getElementById('editSocioId').value);
+  const nombre = document.getElementById('editSocioNombre').value.trim();
+  const cedula = document.getElementById('editSocioCedula').value.trim();
+  const telefono = document.getElementById('editSocioTelefono').value.trim();
   const medidorIngresado = document.getElementById('editSocioMedidor').value.trim();
+
+  // Validaciones en edición
+  const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  if (!regexNombre.test(nombre)) {
+    alert("⚠️ Error en el Nombre Completo: Solo se permite texto.");
+    return;
+  }
+
+  const regexCedulaRuc = /^\d{10}$|^\d{13}$/;
+  if (!regexCedulaRuc.test(cedula)) {
+    alert("⚠️ Error en Cédula / RUC: Debe ser de 10 o 13 dígitos numéricos.");
+    return;
+  }
+
+  const regexTelefono = /^0\d{9}$/;
+  if (!regexTelefono.test(telefono)) {
+    alert("⚠️ Error en Teléfono: Debe tener 10 dígitos y empezar por '0'.");
+    return;
+  }
 
   const medidorExiste = socios.some(s => s.medidor.toLowerCase() === medidorIngresado.toLowerCase() && s.id !== id);
   if (medidorExiste) {
@@ -248,10 +302,10 @@ function guardarEdicionSocio(e) {
   const socio = socios.find(s => s.id === id);
 
   if (socio) {
-    socio.nombre = document.getElementById('editSocioNombre').value.trim();
-    socio.cedula = document.getElementById('editSocioCedula').value.trim();
+    socio.nombre = nombre;
+    socio.cedula = cedula;
     socio.medidor = medidorIngresado;
-    socio.telefono = document.getElementById('editSocioTelefono').value.trim();
+    socio.telefono = telefono;
     socio.lecturaInicial = parseFloat(document.getElementById('editSocioLectura').value) || 0;
     socio.email = document.getElementById('editSocioCorreo').value.trim();
 
