@@ -1,6 +1,6 @@
 // Importar Firebase y Firestore desde el SDK modular de Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebaseapp.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebasefirestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Tu configuración de Firebase
 const firebaseConfig = {
