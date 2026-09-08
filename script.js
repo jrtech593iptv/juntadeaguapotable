@@ -146,6 +146,11 @@ function inicializarInterfazSistema() {
     formNuevoAdmin.addEventListener('submit', registrarNuevoAdmin);
   }
 
+  const formEditarAdmin = document.getElementById('formEditarAdmin');
+  if (formEditarAdmin) {
+    formEditarAdmin.addEventListener('submit', guardarEdicionAdmin);
+  }
+
   document.getElementById('gastoFecha').valueAsDate = new Date();
   
   const anioMesActual = new Date().toISOString().slice(0, 7);
@@ -329,6 +334,44 @@ async function registrarNuevoAdmin(e) {
   alert("✅ Cuenta de administrador creada con éxito.");
 }
 
+function abrirModalEditarAdmin(firestoreId) {
+  const admin = administradores.find(a => a.firestoreId === firestoreId);
+  if (admin) {
+    document.getElementById('editAdminFirestoreId').value = admin.firestoreId;
+    document.getElementById('editAdminUser').value = admin.usuario;
+    document.getElementById('editAdminNewPass').value = "";
+    document.getElementById('modalEditarAdmin').style.display = "flex";
+  }
+}
+
+function cerrarModalEditarAdmin() {
+  document.getElementById('modalEditarAdmin').style.display = "none";
+  document.getElementById('formEditarAdmin').reset();
+}
+
+async function guardarEdicionAdmin(e) {
+  e.preventDefault();
+  const firestoreId = document.getElementById('editAdminFirestoreId').value;
+  const nuevaPassword = document.getElementById('editAdminNewPass').value.trim();
+
+  if (!nuevaPassword) {
+    alert("⚠️ Ingrese una contraseña válida.");
+    return;
+  }
+
+  const admin = administradores.find(a => a.firestoreId === firestoreId);
+  if (admin) {
+    admin.password = nuevaPassword;
+    await updateDoc(doc(db, "administradores", firestoreId), {
+      password: nuevaPassword
+    });
+
+    cerrarModalEditarAdmin();
+    renderizarTablaAdmins();
+    alert(`✅ Contraseña del administrador "${admin.usuario}" actualizada con éxito.`);
+  }
+}
+
 function renderizarTablaAdmins() {
   const tbody = document.getElementById('tablaAdminsBody');
   if (!tbody) return;
@@ -342,10 +385,17 @@ function renderizarTablaAdmins() {
       botonEliminar = `<small style="color: var(--text-light);">Principal</small>`;
     }
 
+    const botonEditar = `<button class="action-btn btn-edit" onclick="abrirModalEditarAdmin('${admin.firestoreId}')">🔑 Cambiar Clave</button>`;
+
     tbody.innerHTML += `
       <tr>
         <td><strong>${admin.usuario}</strong></td>
-        <td>${botonEliminar}</td>
+        <td>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            ${botonEditar}
+            ${botonEliminar}
+          </div>
+        </td>
       </tr>
     `;
   });
@@ -1196,6 +1246,8 @@ window.cerrarModalGestionUsuarios = cerrarModalGestionUsuarios;
 window.cerrarModalEditar = cerrarModalEditar;
 window.abrirModalCredenciales = abrirModalCredenciales;
 window.cerrarModalCredenciales = cerrarModalCredenciales;
+window.abrirModalEditarAdmin = abrirModalEditarAdmin;
+window.cerrarModalEditarAdmin = cerrarModalEditarAdmin;
 window.eliminarAdmin = eliminarAdmin;
 window.abrirModalEditarSocio = abrirModalEditarSocio;
 window.cerrarModalEditarSocio = cerrarModalEditarSocio;
