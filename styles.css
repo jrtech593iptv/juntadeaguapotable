@@ -1,509 +1,214 @@
-:root {
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --bg: #f8fafc;
-  --card-bg: #ffffff;
-  --text: #1e293b;
-  --text-light: #64748b;
-  --border: #e2e8f0;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --secondary: #475569;
-  --table-head-bg: #f1f5f9;
-  --input-readonly-bg: #e2e8f0;
-}
-
-[data-theme="dark"] {
-  --primary: #38bdf8;
-  --primary-hover: #0ea5e9;
-  --bg: #0f172a;
-  --card-bg: #1e293b;
-  --text: #f8fafc;
-  --text-light: #94a3b8;
-  --border: #334155;
-  --success: #22c55e;
-  --warning: #fbbf24;
-  --danger: #ef4444;
-  --secondary: #64748b;
-  --table-head-bg: #1e293b;
-  --input-readonly-bg: #0f172a;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
-  padding-bottom: 20px;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-body.bloqueado {
-  overflow: hidden;
-}
-
-body.bloqueado > *:not(#modalLogin) {
-  filter: blur(5px);
-  pointer-events: none;
-  user-select: none;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.navbar {
-  background-color: var(--primary);
-  color: white;
-  padding: 16px 0;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.subtitle {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.reloj-container {
-  background-color: rgba(255, 255, 255, 0.15);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: #ffffff;
-}
-
-#textoReloj {
-  letter-spacing: 1px;
-}
-
-#textoFecha {
-  font-size: 0.75rem;
-  opacity: 0.9;
-  font-weight: 400;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.tab-btn {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.tab-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
-.tab-btn.active {
-  background-color: white;
-  color: var(--primary);
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-.card {
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.card h2 {
-  font-size: 1.25rem;
-  color: var(--primary);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.kpi-card {
-  background-color: var(--card-bg);
-  padding: 18px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.kpi-card h3 {
-  font-size: 0.85rem;
-  color: var(--text-light);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.kpi-card p {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.kpi-capital p { color: var(--primary); }
-.kpi-ingresos p { color: var(--success); }
-.kpi-gastos p { color: var(--danger); }
-.kpi-balance p { color: var(--text); }
-
-.grid-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-actions-compact {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  margin-top: 5px;
-}
-
-.form-actions-compact .btn {
-  padding: 10px 20px;
-  width: auto;
-  flex: 0 1 auto;
-}
-
-label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--text);
-}
-
-input, select {
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.95rem;
-  width: 100%;
-  background-color: var(--card-bg);
-  color: var(--text);
-}
-
-input:read-only {
-  background-color: var(--input-readonly-bg);
-  cursor: not-allowed;
-}
-
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
-}
-
-.btn-primary { background-color: var(--primary); color: white; }
-.btn-secondary { background-color: var(--secondary); color: white; }
-.btn-success { background-color: var(--success); color: white; }
-.btn-danger { background-color: var(--danger); color: white; }
-.btn-warning { background-color: var(--warning); color: white; }
-
-.btn:hover { opacity: 0.9; }
-
-.search-box input {
-  min-width: 250px;
-}
-
-.table-responsive {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 0.9rem;
-}
-
-/* CORRECCIÓN: Garantizar que todas las celdas de las tablas hereden el color correcto según el tema */
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-
-th {
-  background-color: var(--table-head-bg);
-  font-weight: 600;
-  color: var(--text-light);
-}
-
-.badge-pending {
-  background-color: #fef3c7;
-  color: var(--warning);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.badge-paid {
-  background-color: #dcfce7;
-  color: var(--success);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.badge-egreso {
-  background-color: #fee2e2;
-  color: var(--danger);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.action-btn {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  margin-right: 4px;
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.btn-pay { background-color: #22c55e; color: white; }
-.btn-edit { background-color: #f59e0b; color: white; }
-.btn-print { background-color: #0284c7; color: white; }
-.btn-delete { background-color: #ef4444; color: white; }
-
-.action-btn:hover { opacity: 0.85; }
-
-.card-footer {
-  margin-top: 15px;
-  font-size: 0.875rem;
-  color: var(--text-light);
-  font-weight: 600;
-}
-
-.site-footer {
-  background-color: var(--card-bg);
-  color: var(--text-light);
-  text-align: center;
-  padding: 20px 0;
-  margin-top: 40px;
-  border-top: 1px solid var(--border);
-  font-size: 0.875rem;
-}
-
-.site-footer strong {
-  color: var(--text);
-}
-
-.site-footer p + p {
-  margin-top: 4px;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 15px;
-}
-
-.modal-content {
-  background-color: var(--card-bg);
-  color: var(--text);
-  padding: 20px;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
-  position: relative;
-  max-height: 85vh;
-  overflow-y: auto; 
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border: 1px solid var(--border);
-}
-
-.modal-content.modal-large {
-  max-width: 900px;
-  max-height: 85vh;
-}
-
-.modal-content.modal-large .table-responsive {
-  max-height: 60vh;
-  overflow-y: auto;
-  margin-top: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.close-modal {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 1.6rem;
-  cursor: pointer;
-  z-index: 10;
-  background: var(--card-bg);
-  color: var(--text);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.close-modal:hover {
-  background-color: var(--border);
-  color: var(--danger);
-}
-
-@media (max-width: 768px) {
-  .nav-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .nav-tabs {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .tab-btn {
-    flex: 1;
-    text-align: center;
-    padding: 10px 8px;
-    font-size: 0.8rem;
-  }
-
-  .card {
-    padding: 16px;
-  }
-
-  .card-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .action-buttons .btn, 
-  .action-buttons .search-box input,
-  .action-buttons select {
-    width: 100% !important;
-  }
-
-  .search-box {
-    width: 100%;
-  }
-
-  .grid-form {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions-compact {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .form-actions-compact .btn {
-    width: 100%;
-  }
-
-  .modal {
-    padding: 10px;
-  }
-
-  .modal-content {
-    max-height: 90vh;
-    padding: 16px;
-  }
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Junta de Agua Potable - Gestión y Contabilidad</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bloqueado">
+
+  <div id="modalLogin" class="modal" style="display: flex;">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+      <h3 style="color: var(--primary); margin-bottom: 15px;">🔒 Acceso al Sistema</h3>
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 20px;">Junta de Agua Potable TOLONTAG</p>
+      
+      <form id="formLogin" class="modal-form">
+        <div class="form-group" style="text-align: left;">
+          <label for="usuarioLogin">Usuario:</label>
+          <input type="text" id="usuarioLogin" placeholder="Ingrese su usuario" required>
+        </div>
+        <div class="form-group" style="text-align: left;">
+          <label for="passwordLogin">Contraseña:</label>
+          <input type="password" id="passwordLogin" placeholder="Ingrese su contraseña" required>
+        </div>
+        <div class="form-actions" style="margin-top: 15px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Ingresar al Sistema</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <header class="navbar">
+    <div class="container nav-container">
+      <div>
+        <h1>🚰 Junta de Agua Potable TOLONTAG</h1>
+        <span class="subtitle">Sistema de Lecturas, Facturación y Contabilidad</span>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="reloj-container">
+          <div id="textoReloj">🕒 00:00:00</div>
+          <div id="textoFecha">📅 Cargando fecha...</div>
+        </div>
+        <button class="btn btn-secondary" onclick="toggleModoOscuro()" id="btnModoOscuro" style="font-size: 0.85rem; padding: 8px 12px;">🌙 Modo Oscuro</button>
+        <button class="btn btn-warning" onclick="abrirModalCredenciales()" style="font-size: 0.85rem; padding: 8px 12px;">🔑 Cuentas Admin</button>
+        <button class="btn btn-danger" onclick="cerrarSesion()" style="font-size: 0.85rem; padding: 8px 12px;">🚪 Cerrar Sesión</button>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="tab-btn active" onclick="cambiarPestana('facturacion')">📋 Facturación y Lecturas</button>
+        <button class="tab-btn" onclick="cambiarPestana('contabilidad')">📊 Contabilidad y Caja</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <div id="sec-facturacion" class="tab-content active">
+      <section class="card">
+        <div class="card-header">
+          <h2>📝 Registrar Nueva Lectura</h2>
+          <div class="action-buttons">
+            <button type="button" class="btn btn-secondary" onclick="abrirModalSocio()">➕ Nuevo Registro de Usuario</button>
+            <button type="button" class="btn btn-danger" onclick="abrirModalGestionUsuarios()">👥 Gestionar / Editar Usuarios</button>
+          </div>
+        </div>
+        
+        <form id="formLectura" class="grid-form">
+          <div class="form-group">
+            <label for="inputPeriodoPago">📅 Período de Pago:</label>
+            <input type="month" id="inputPeriodoPago" required>
+          </div>
+          <div class="form-group">
+            <label for="inputFiltroSocio">🔍 Buscar Socio:</label>
+            <input type="text" id="inputFiltroSocio" placeholder="Escriba para filtrar...">
+          </div>
+          <div class="form-group">
+            <label for="selectSocio">Socio / Usuario:</label>
+            <select id="selectSocio" required>
+              <option value="">-- Seleccione un Socio --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="inputMedidor">N° Medidor:</label>
+            <input type="text" id="inputMedidor" readonly>
+          </div>
+          <div class="form-group">
+            <label for="inputAnterior">Lectura Anterior (m³):</label>
+            <input type="number" id="inputAnterior" readonly>
+          </div>
+          <div class="form-group">
+            <label for="inputActual">Lectura Actual (m³):</label>
+            <input type="number" id="inputActual" min="0" step="1" required>
+          </div>
+          <div class="form-group">
+            <label for="inputConsumoCalculado">Consumo Calculado (m³):</label>
+            <input type="text" id="inputConsumoCalculado" readonly>
+          </div>
+          <div class="form-group">
+            <label for="inputValorCalculado">Total Estimado ($):</label>
+            <input type="text" id="inputValorCalculado" readonly>
+          </div>
+          <div class="form-group full-width form-actions-compact">
+            <button type="submit" class="btn btn-primary">💾 Guardar Lectura</button>
+            <button type="button" class="btn btn-warning" onclick="limpiarFormularioLectura()">🧹 Limpiar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>📋 Registros y Facturas</h2>
+          <div class="action-buttons" style="align-items: center; gap: 10px;">
+            <div class="search-box">
+              <input type="text" id="inputBuscar" placeholder="🔍 Buscar...">
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <select id="selectFormatoExportar" class="form-control" style="padding: 8px;">
+                <option value="">-- Seleccionar Formato --</option>
+                <option value="pdf">📄 Exportar a PDF</option>
+                <option value="xls">📊 Exportar a XLS</option>
+              </select>
+              <button class="btn btn-success" onclick="ejecutarExportacionLecturas()">📥 Exportar</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="tablaLecturas">
+            <thead>
+              <tr>
+                <th>Período</th><th>Socio</th><th>Medidor</th><th>Anterior</th><th>Actual</th><th>Consumo</th><th>Total</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+          </table>
+        </div>
+        <div class="card-footer"><span id="totalPlanillas">Total: 0</span></div>
+      </section>
+    </div>
+
+    <div id="sec-contabilidad" class="tab-content">
+      <section class="kpi-grid">
+        <div class="kpi-card kpi-capital"><h3>Capital Inicial</h3><p id="kpiCapitalDisplay">$0.00</p></div>
+        <div class="kpi-card kpi-ingresos"><h3>Ingresos</h3><p id="kpiIngresos">$0.00</p></div>
+        <div class="kpi-card kpi-gastos"><h3>Egresos</h3><p id="kpiGastos">$0.00</p></div>
+        <div class="kpi-card kpi-balance"><h3>Balance</h3><p id="kpiBalance">$0.00</p></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Sistema desarrollado por <strong>César Oña - JR TECH</strong></p>
+    </div>
+  </footer>
+
+  <!-- MODAL DE CREDENCIALES / ADMINISTRADORES -->
+  <div id="modalCredenciales" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalCredenciales()">&times;</span>
+      <h3>🔑 Gestión de Cuentas de Acceso (Admin)</h3>
+      
+      <form id="formNuevoAdmin" class="modal-form" style="margin-bottom: 20px;">
+        <div class="form-group">
+          <label for="nuevoAdminUser">Nombre de Usuario:</label>
+          <input type="text" id="nuevoAdminUser" required>
+        </div>
+        <div class="form-group">
+          <label for="nuevoAdminPass">Contraseña:</label>
+          <input type="password" id="nuevoAdminPass" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">➕ Registrar Nuevo Administrador</button>
+      </form>
+
+      <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--primary);">Usuarios Administradores Actuales:</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Usuario</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="tablaAdminsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR ADMINISTRADOR -->
+  <div id="modalEditarAdmin" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="cerrarModalEditarAdmin()">&times;</span>
+      <h3>✏️ Editar Información de Administrador</h3>
+      <form id="formEditarAdmin" class="modal-form">
+        <input type="hidden" id="editAdminFirestoreId">
+        <div class="form-group">
+          <label for="editAdminUser">Nombre de Usuario:</label>
+          <input type="text" id="editAdminUser" required>
+        </div>
+        <div class="form-group">
+          <label for="editAdminNewPass">Nueva Contraseña (dejar en blanco para no cambiar):</label>
+          <input type="password" id="editAdminNewPass" placeholder="Nueva contraseña segura">
+        </div>
+        <div class="form-actions" style="margin-top: 15px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>[cite: 16]
